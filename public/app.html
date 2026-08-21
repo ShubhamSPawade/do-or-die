@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DO OR DIE - Accountability Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral+SC:wght@600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TOKENS
+========================================================= */
+:root{
+  --bg:        #ffffff;
+  --paper:     #f4f4f2;
+  --ink:       #111111;
+  --line:      #171717;
+  --gray-1:    #ececea;
+  --gray-2:    #cfcfcb;
+  --gray-3:    #9c9c96;
+  --gray-4:    #55554f;
+  --stamp:     #8f2318;
+  --stamp-bg:  #f7e9e7;
+
+  --font-display: 'Spectral', Georgia, 'Times New Roman', serif;
+  --font-sc:      'Spectral SC', Georgia, serif;
+  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-mono);
+  font-size:13px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:var(--ink); color:var(--bg); }
+button{ font-family:inherit; }
+input, select{ font-family:inherit; }
+
+.hidden{ display:none !important; }
+
+/* =========================================================
+   SHARED PRIMITIVES
+========================================================= */
+.wrap{
+  max-width:760px;
+  margin:0 auto;
+  padding:20px 18px 60px;
+}
+.case-box{
+  border:1px solid var(--line);
+  background:var(--bg);
+}
+.case-box + .case-box{ margin-top:14px; }
+.case-box-pad{ padding:18px; }
+
+.eyebrow{
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--gray-4);
+  font-weight:600;
+}
+.rule{ border:0; border-top:1px solid var(--line); margin:14px 0; }
+.rule-light{ border:0; border-top:1px solid var(--gray-2); margin:12px 0; }
+
+.big-num{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  font-weight:600;
+  padding:9px 14px;
+  border:1px solid var(--line);
+  background:var(--bg);
+  color:var(--ink);
+  cursor:pointer;
+  border-radius:0;
+}
+.btn:hover{ background:var(--ink); color:var(--bg); }
+.btn:active{ transform:translateY(1px); }
+.btn-block{ width:100%; display:block; }
+.btn-filled{ background:var(--ink); color:var(--bg); }
+.btn-filled:hover{ background:var(--bg); color:var(--ink); }
+.btn-ghost{ border-color:var(--gray-2); color:var(--gray-4); }
+.btn-ghost:hover{ background:var(--gray-1); color:var(--ink); }
+.btn-done{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+.btn-sm{ padding:5px 8px; font-size:10px; }
+
+.field{ margin-bottom:12px; }
+.field label{
+  display:block;
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--gray-4);
+  margin-bottom:6px;
+  font-weight:600;
+}
+.field input[type="text"],
+.field input[type="email"],
+.field input[type="password"],
+.field select{
+  width:100%;
+  padding:10px 10px;
+  border:1px solid var(--line);
+  background:var(--bg);
+  color:var(--ink);
+  font-size:13px;
+  font-family:var(--font-mono);
+}
+.field input:focus, .seg-btn:focus-visible, .btn:focus-visible, .cell:focus-visible{
+  outline:2px solid var(--ink);
+  outline-offset:2px;
+}
+.seg{
+  display:flex;
+  border:1px solid var(--line);
+}
+.seg-btn{
+  flex:1;
+  padding:9px 8px;
+  background:var(--bg);
+  border:0;
+  border-right:1px solid var(--line);
+  cursor:pointer;
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-weight:600;
+  color:var(--gray-4);
+}
+.seg-btn:last-child{ border-right:0; }
+.seg-btn.active{ background:var(--ink); color:var(--bg); }
+
+.badge{
+  display:inline-block;
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-weight:700;
+  padding:3px 7px;
+  border:1px solid var(--line);
+}
+.badge-high{ background:var(--ink); color:var(--bg); }
+.badge-medium{ background:var(--gray-1); color:var(--ink); border-color:var(--gray-2); }
+.badge-low{ background:var(--bg); color:var(--gray-4); border-color:var(--gray-2); }
+
+.error-text{ color:var(--stamp); font-size:11px; margin-top:8px; }
+
+/* =========================================================
+   LOGIN
+========================================================= */
+#login-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.login-card{
+  width:100%;
+  max-width:340px;
+  border:1px solid var(--line);
+  background:var(--bg);
+  padding:30px 26px 26px;
+}
+.wordmark{
+  font-family:var(--font-sc);
+  font-size:26px;
+  letter-spacing:.06em;
+  text-align:center;
+  margin:0 0 4px;
+}
+.wordmark-sub{
+  text-align:center;
+  font-size:10px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--gray-4);
+  margin-bottom:22px;
+}
+.login-tenet{
+  font-family:var(--font-display);
+  font-style:italic;
+  text-align:center;
+  font-size:13px;
+  color:var(--gray-4);
+  margin:20px 0 0;
+  line-height:1.5;
+}
+
+/* =========================================================
+   APP SHELL
+========================================================= */
+#app-header{
+  border-bottom:1px solid var(--line);
+  background:var(--bg);
+}
+.header-inner{
+  max-width:760px;
+  margin:0 auto;
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.header-mark{
+  font-family:var(--font-sc);
+  font-size:16px;
+  letter-spacing:.05em;
+}
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.header-role{
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--gray-4);
+  border:1px solid var(--gray-2);
+  padding:3px 7px;
+}
+
+.section-title{
+  font-family:var(--font-display);
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:.02em;
+  margin:0 0 2px;
+}
+.section-sub{
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gray-3);
+  margin-bottom:14px;
+}
+
+/* task list */
+.task-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 0;
+  border-top:1px solid var(--gray-1);
+}
+.task-row:first-child{ border-top:0; }
+.task-info{ flex:1; min-width:0; }
+.task-name{ font-family:var(--font-display); font-size:15px; font-weight:600; }
+.task-meta{
+  margin-top:5px;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  font-size:10px;
+  color:var(--gray-4);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.task-time{ font-family:var(--font-mono); }
+.task-toggle{ flex-shrink:0; min-width:96px; text-align:center; }
+
+/* verdict / stat blocks */
+.stat-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+}
+.stat-cell{
+  background:var(--bg);
+  padding:16px;
+}
+.stat-cell .eyebrow{ margin-bottom:8px; }
+.stat-cell .big-num{ font-size:26px; }
+.stat-cell .stat-note{ font-size:10px; color:var(--gray-3); margin-top:4px; letter-spacing:.05em; }
+
+.today-hero{
+  text-align:center;
+  padding:22px 18px 6px;
+}
+.today-hero .eyebrow{ text-align:center; }
+.today-hero .big-num{
+  font-size:46px;
+  display:block;
+  margin:6px 0 2px;
+}
+.today-hero .verdict-line{
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  font-weight:700;
+  margin-top:4px;
+}
+.verdict-good{ color:var(--ink); }
+.verdict-bad{ color:var(--stamp); }
+
+.streak-row{
+  display:flex;
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  margin-top:14px;
+}
+.streak-cell{
+  flex:1;
+  background:var(--bg);
+  padding:14px 16px;
+  text-align:center;
+}
+.streak-cell .big-num{ font-size:22px; }
+
+/* contribution chart */
+.chart-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+.chart-grid{
+  display:grid;
+  grid-template-columns:repeat(7, 1fr);
+  gap:4px;
+}
+.cell{
+  aspect-ratio:1;
+  border:1px solid var(--gray-2);
+  cursor:pointer;
+  position:relative;
+  background:var(--bg);
+}
+.cell:hover{ border-color:var(--ink); }
+.cell.cell-empty{ cursor:default; border-style:dashed; border-color:var(--gray-1); }
+.cell.cell-future{ cursor:default; border-style:dashed; border-color:var(--gray-1); opacity:.4; }
+.cell-0{ background:var(--gray-1); }
+.cell-1{ background:#d6d6d2; }
+.cell-2{ background:#b3b3ad; }
+.cell-3{ background:#87877f; }
+.cell-4{ background:#54544d; }
+.cell-5{ background:var(--ink); }
+.chart-legend{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin-top:10px;
+  font-size:9px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--gray-3);
+}
+.legend-sq{ width:10px; height:10px; border:1px solid var(--gray-2); display:inline-block; }
+
+/* day-lock stamp */
+.lock-note{
+  margin-top:12px;
+  font-size:10px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--gray-3);
+  text-align:center;
+}
+
+/* modal */
+.modal-overlay{
+  position:fixed; inset:0;
+  background:rgba(17,17,17,.55);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  z-index:50;
+}
+.modal-box{
+  width:100%;
+  max-width:300px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  padding:22px;
+  position:relative;
+}
+.modal-stamp{
+  position:absolute;
+  top:14px; right:16px;
+  font-family:var(--font-sc);
+  font-size:10px;
+  letter-spacing:.1em;
+  color:var(--stamp);
+  border:1.5px solid var(--stamp);
+  padding:2px 6px;
+  transform:rotate(6deg);
+}
+.modal-date{
+  font-family:var(--font-display);
+  font-size:17px;
+  font-weight:600;
+  margin-bottom:14px;
+}
+.modal-row{ display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-top:1px solid var(--gray-1); }
+.modal-row:first-of-type{ border-top:0; }
+.modal-close{ margin-top:16px; }
+
+/* score */
+.score-box{ text-align:center; padding:20px 18px; }
+.score-num{ font-size:40px; }
+.score-label{
+  margin-top:4px;
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-weight:700;
+}
+.score-excellent, .score-strong{ color:var(--ink); }
+.score-falling, .score-critical{ color:var(--stamp); }
+
+/* admin */
+.admin-tag{
+  font-family:var(--font-sc);
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--gray-4);
+}
+.task-def-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-top:1px solid var(--gray-1); font-size:12px;
+}
+.task-def-row:first-child{ border-top:0; }
+
+.footer-note{
+  text-align:center;
+  font-size:10px;
+  color:var(--gray-3);
+  letter-spacing:.05em;
+  margin-top:26px;
+  font-style:italic;
+  font-family:var(--font-display);
+}
+
+@media (max-width:480px){
+  .stat-grid{ grid-template-columns:1fr 1fr; }
+  .today-hero .big-num{ font-size:38px; }
+  .chart-grid{ gap:3px; }
+}
+
+/* =========================================================
+   LOADER - "DO or DIE" decrypt effect
+========================================================= */
+#loader{
+  position:fixed; inset:0;
+  background:var(--paper);
+  z-index:100;
+  display:flex; align-items:center; justify-content:center;
+}
+.loader-mark{
+  font-family:var(--font-sc);
+  font-size:46px;
+  letter-spacing:.08em;
+  text-align:center;
+  white-space:nowrap;
+}
+.ld-do{ color:var(--ink); }
+.ld-die{ color:var(--stamp); }
+.ld-or{
+  color:var(--gray-3);
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:24px;
+  margin:0 12px;
+}
+.loader-sub{
+  margin-top:12px;
+  text-align:center;
+  font-size:10px;
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  color:var(--gray-4);
+}
+.scramble-char{ opacity:.45; }
+</style>
+</head>
+<body>
+
+<!-- ============================ LOADER ============================ -->
+<div id="loader">
+  <div>
+    <div class="loader-mark">
+      <span class="ld-word ld-do" data-text="DO">&nbsp;</span><span class="ld-or">or</span><span class="ld-word ld-die" data-text="DIE">&nbsp;</span>
+    </div>
+    <div class="loader-sub">Accountability Ledger</div>
+  </div>
+</div>
+
+<!-- ============================ LOGIN ============================ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="wordmark">Do or Die</div>
+    <div class="wordmark-sub">Accountability Ledger</div>
+
+    <div class="field">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" autocomplete="current-password">
+    </div>
+    <button class="btn btn-filled btn-block" id="login-btn">Sign In</button>
+    <div class="error-text hidden" id="login-error">Incorrect email or password.</div>
+
+    <p class="login-tenet">"You can improve tomorrow.<br>You cannot rewrite yesterday."</p>
+  </div>
+</div>
+
+<!-- ============================ APP ============================ -->
+<div id="app" class="hidden">
+  <div id="app-header">
+    <div class="header-inner">
+      <div class="header-mark">Do or Die</div>
+      <div class="header-right">
+        <span class="header-role" id="header-role"></span>
+        <button class="btn btn-ghost hidden" id="my-day-btn">My Day</button>
+        <button class="btn btn-ghost" id="logout-btn">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="user-view" class="hidden"></div>
+    <div id="admin-view" class="hidden"></div>
+    <div class="footer-note">no editing the past.</div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+/* =========================================================
+   AUTH + STATE SYNC - credentials live in creds.json and each
+   user's ledger in data.json, both on the server. All state
+   changes are pushed via /api/state; nothing secret client-side.
+========================================================= */
+const SESSION_KEY = 'doOrDie_session_v1';
+let state = null;        // ledger of the user currently being viewed
+let stateOwner = null;   // email of that user
+let me = null;           // signed-in user
+let showingOwnView = false; // admin toggled to their personal dashboard
+
+function authHeaders(){
+  const h = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem(SESSION_KEY);
+  if(token) h['Authorization'] = 'Bearer ' + token;
+  return h;
+}
+async function postJson(path, body){
+  const res = await fetch(path, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+async function getJson(path){
+  const res = await fetch(path, { headers: { 'Authorization': 'Bearer ' + (localStorage.getItem(SESSION_KEY) || '') } });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+async function attemptLogin(email, password){
+  const r = await postJson('/api/login', { email, password });
+  if(!r.ok) return null;
+  localStorage.setItem(SESSION_KEY, r.data.token);
+  return r.data; // {email, role, name}
+}
+async function getSession(){
+  const token = localStorage.getItem(SESSION_KEY);
+  if(!token) return null;
+  const r = await postJson('/api/session', { token });
+  if(!r.ok){ localStorage.removeItem(SESSION_KEY); return null; }
+  return r.data.user;
+}
+function logout(){
+  const token = localStorage.getItem(SESSION_KEY);
+  if(token) postJson('/api/logout', { token });
+  localStorage.removeItem(SESSION_KEY);
+}
+async function fetchState(ownerEmail){
+  const q = ownerEmail ? '?user=' + encodeURIComponent(ownerEmail) : '';
+  const r = await getJson('/api/state' + q);
+  if(!r.ok) throw new Error('Failed to load ledger');
+  const s = r.data.state;
+  if(!s || !Array.isArray(s.tasks)) return { tasks: [], dailyProgress: {} };
+  if(!s.dailyProgress) s.dailyProgress = {};
+  return s;
+}
+function saveState(){
+  postJson('/api/state', { user: stateOwner, state }).catch(e => console.warn('Save failed:', e));
+}
+
+/* =========================================================
+   DATE HELPERS
+========================================================= */
+function pad(n){ return String(n).padStart(2, '0'); }
+function formatYMD(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function todayStr(){ return formatYMD(new Date()); }
+function parseYMD(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function prettyDateLong(dateStr){
+  const d = parseYMD(dateStr);
+  const year = d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '';
+  return MONTH_NAMES[d.getMonth()].toUpperCase() + ' ' + d.getDate() + year;
+}
+function prettyMonthYear(year, month){
+  return MONTH_NAMES[month].toUpperCase() + ' ' + year;
+}
+
+/* =========================================================
+   TASK MANAGEMENT (admin only mutates)
+========================================================= */
+function uid(){ return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function addTask(name, timeLabel, importance){
+  state.tasks.push({
+    id: uid(),
+    name: name.trim(),
+    timeLabel: timeLabel.trim(),
+    importance,             // 'HIGH' | 'MEDIUM' | 'LOW'
+    createdDate: todayStr()
+  });
+  saveState();
+}
+
+// Tasks that were live on a given date (created on/before that date).
+function tasksForDate(dateStr){
+  return state.tasks.filter(t => t.createdDate <= dateStr);
+}
+
+/* =========================================================
+   PROGRESS - the core "no editing the past" rule lives here.
+========================================================= */
+function isEditableDate(dateStr){
+  return dateStr === todayStr();
+}
+function getDayRecord(dateStr){
+  return state.dailyProgress[dateStr] || { statuses: {} };
+}
+function setTaskStatus(dateStr, taskId, done){
+  if(!isEditableDate(dateStr)) return; // hard guard: past days are immutable
+  if(!state.dailyProgress[dateStr]) state.dailyProgress[dateStr] = { statuses: {} };
+  state.dailyProgress[dateStr].statuses[taskId] = done;
+  saveState();
+}
+function dayStats(dateStr){
+  const tasks = tasksForDate(dateStr);
+  const total = tasks.length;
+  if(total === 0) return { total: 0, completed: 0, pct: null };
+  const rec = state.dailyProgress[dateStr];
+  const completed = tasks.filter(t => rec && rec.statuses[t.id] === true).length;
+  return { total, completed, pct: Math.round((completed / total) * 100) };
+}
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+function firstTrackedDate(){
+  if(state.tasks.length === 0) return todayStr();
+  return state.tasks.reduce((min, t) => t.createdDate < min ? t.createdDate : min, state.tasks[0].createdDate);
+}
+function allDatesWithTasks(){
+  const first = parseYMD(firstTrackedDate());
+  const end = parseYMD(todayStr());
+  const out = [];
+  for(let d = new Date(first); d <= end; d.setDate(d.getDate() + 1)){
+    const ds = formatYMD(d);
+    const s = dayStats(ds);
+    if(s.total > 0) out.push({ date: ds, ...s });
+  }
+  return out; // chronological ascending
+}
+function computeStreaks(){
+  const days = allDatesWithTasks();
+  let current = 0;
+  for(let i = days.length - 1; i >= 0; i--){
+    if(days[i].pct >= 80) current++; else break;
+  }
+  let best = 0, run = 0;
+  days.forEach(d => {
+    if(d.pct >= 80){ run++; best = Math.max(best, run); }
+    else run = 0;
+  });
+  return { current, best };
+}
+function last7Average(){
+  const end = parseYMD(todayStr());
+  const pcts = [];
+  for(let i = 6; i >= 0; i--){
+    const d = new Date(end);
+    d.setDate(d.getDate() - i);
+    const pct = dayStats(formatYMD(d)).pct;
+    if(pct !== null) pcts.push(pct);
+  }
+  if(pcts.length === 0) return 0;
+  return Math.round(pcts.reduce((a, p) => a + p, 0) / pcts.length);
+}
+function monthStats(year, month){
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let completedSum = 0, totalSum = 0, successfulDays = 0, countedDays = 0;
+  for(let day = 1; day <= daysInMonth; day++){
+    const ds = year + '-' + pad(month + 1) + '-' + pad(day);
+    if(ds > todayStr()) break;
+    const s = dayStats(ds);
+    if(s.total > 0){
+      completedSum += s.completed;
+      totalSum += s.total;
+      countedDays++;
+      if(s.pct >= 80) successfulDays++;
+    }
+  }
+  const avg = totalSum ? Math.round((completedSum / totalSum) * 100) : 0;
+  return {
+    avgCompletion: avg,
+    tasksCompleted: completedSum,
+    tasksMissed: totalSum - completedSum,
+    successfulDays,
+    countedDays,
+    verdict: avg >= 80 ? 'PASS' : 'FAILED'
+  };
+}
+function accountabilityScore(){
+  const now = new Date();
+  const ms = monthStats(now.getFullYear(), now.getMonth());
+  const { current } = computeStreaks();
+  const consistency = ms.countedDays ? (ms.successfulDays / ms.countedDays * 100) : 0;
+  const streakBonus = Math.min(current / 14 * 100, 100);
+  let score = Math.round(0.5 * ms.avgCompletion + 0.3 * consistency + 0.2 * streakBonus);
+  score = Math.max(0, Math.min(100, score));
+  const label = score >= 90 ? 'Excellent' : score >= 75 ? 'Strong' : score >= 50 ? 'Falling Behind' : 'Critical';
+  const cls = score >= 90 ? 'score-excellent' : score >= 75 ? 'score-strong' : score >= 50 ? 'score-falling' : 'score-critical';
+  return { score, label, cls };
+}
+
+/* =========================================================
+   CONTRIBUTION CHART
+========================================================= */
+function bucketClass(pct){
+  if(pct === null) return 'cell-empty';
+  if(pct === 0) return 'cell-0';
+  if(pct <= 25) return 'cell-1';
+  if(pct <= 50) return 'cell-2';
+  if(pct <= 75) return 'cell-3';
+  if(pct < 100) return 'cell-4';
+  return 'cell-5';
+}
+
+function renderContributionChart(year, month){
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthLabel = prettyMonthYear(year, month);
+  let cells = '';
+  for(let day = 1; day <= daysInMonth; day++){
+    const ds = year + '-' + pad(month + 1) + '-' + pad(day);
+    const isFuture = ds > todayStr();
+    if(isFuture){
+      cells += `<div class="cell cell-future" title="Not yet"></div>`;
+      continue;
+    }
+    const s = dayStats(ds);
+    const cls = bucketClass(s.pct);
+    if(s.total === 0){
+      cells += `<div class="cell cell-empty" title="No tasks assigned"></div>`;
+    } else {
+      cells += `<div class="cell ${cls}" data-date="${ds}" role="button" tabindex="0" aria-label="${prettyDateLong(ds)}: ${s.pct}% complete"></div>`;
+    }
+  }
+  return `
+    <div class="chart-head">
+      <div>
+        <div class="section-title">Contribution Chart</div>
+        <div class="section-sub">${monthLabel}</div>
+      </div>
+    </div>
+    <div class="chart-grid">${cells}</div>
+    <div class="chart-legend">
+      <span>LOW</span>
+      <span class="legend-sq" style="background:var(--gray-1)"></span>
+      <span class="legend-sq" style="background:#d6d6d2"></span>
+      <span class="legend-sq" style="background:#b3b3ad"></span>
+      <span class="legend-sq" style="background:#87877f"></span>
+      <span class="legend-sq" style="background:#54544d"></span>
+      <span class="legend-sq" style="background:var(--ink)"></span>
+      <span>HIGH</span>
+    </div>
+  `;
+}
+
+function bindChartClicks(root){
+  root.querySelectorAll('.cell[data-date]').forEach(cell => {
+    const open = () => showDayModal(cell.getAttribute('data-date'));
+    cell.addEventListener('click', open);
+    cell.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  });
+}
+
+function showDayModal(dateStr){
+  const s = dayStats(dateStr);
+  const locked = !isEditableDate(dateStr);
+  const modalRoot = document.getElementById('modal-root');
+  modalRoot.innerHTML = `
+    <div class="modal-overlay" id="modal-overlay" tabindex="-1">
+      <div class="case-box modal-box">
+        ${locked ? '<div class="modal-stamp">LOCKED</div>' : ''}
+        <div class="modal-date">${prettyDateLong(dateStr)}</div>
+        <div class="modal-row"><span>Completion</span><strong>${s.pct}%</strong></div>
+        <div class="modal-row"><span>Completed</span><strong>${s.completed} / ${s.total} tasks</strong></div>
+        <button class="btn btn-block modal-close" id="modal-close-btn">Close</button>
+      </div>
+    </div>
+  `;
+  const overlay = document.getElementById('modal-overlay');
+  const closeBtn = document.getElementById('modal-close-btn');
+  overlay.focus();
+  function onKey(e){ if(e.key === 'Escape') close(); }
+  function close(){ document.removeEventListener('keydown', onKey); modalRoot.innerHTML = ''; }
+  overlay.addEventListener('click', e => { if(e.target.id === 'modal-overlay') close(); });
+  closeBtn.addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
+}
+
+/* =========================================================
+   RENDER - USER DASHBOARD
+========================================================= */
+function importanceBadge(importance){
+  const cls = importance === 'HIGH' ? 'badge-high' : importance === 'MEDIUM' ? 'badge-medium' : 'badge-low';
+  return `<span class="badge ${cls}">${importance}</span>`;
+}
+
+function renderUserDashboard(){
+  const now = new Date();
+  const today = formatYMD(now);
+  const tasks = tasksForDate(today);
+  const rec = getDayRecord(today);
+  const completed = tasks.filter(t => rec.statuses[t.id] === true).length;
+  const total = tasks.length;
+  const pct = total ? Math.round((completed / total) * 100) : 0;
+
+  const { current, best } = computeStreaks();
+  const ms = monthStats(now.getFullYear(), now.getMonth());
+  const score = accountabilityScore();
+
+  const taskRows = tasks.length === 0
+    ? `<p style="color:var(--gray-3); font-style:italic; font-family:var(--font-display);">No tasks assigned yet. Check back once the admin adds today's work.</p>`
+    : tasks.map(t => {
+        const done = rec.statuses[t.id] === true;
+        return `
+        <div class="task-row">
+          <div class="task-info">
+            <div class="task-name">${escapeHtml(t.name)}</div>
+            <div class="task-meta">
+              <span class="task-time">${escapeHtml(t.timeLabel)}</span>
+              ${importanceBadge(t.importance)}
+            </div>
+          </div>
+          <div class="task-toggle">
+            <button class="btn ${done ? 'btn-done' : ''}" data-task-id="${t.id}">${done ? 'Done' : 'Mark Done'}</button>
+          </div>
+        </div>`;
+      }).join('');
+
+  let verdictLine = '';
+  if(total === 0){ verdictLine = ''; }
+  else if(pct === 100){ verdictLine = `<div class="verdict-line verdict-good">DAY COMPLETE</div>`; }
+  else if(pct < 50){ verdictLine = `<div class="verdict-line verdict-bad">YOU ARE FALLING BEHIND</div>`; }
+
+  const html = `
+    <div class="case-box">
+      <div class="case-box-pad">
+        <div class="section-title">Today - ${prettyDateLong(today)}</div>
+        <div class="section-sub">Mark today's tasks. Nothing else can be touched.</div>
+        ${taskRows}
+      </div>
+    </div>
+
+    <div class="case-box">
+      <div class="today-hero">
+        <div class="eyebrow">Today</div>
+        <span class="big-num">${completed} / ${total}</span>
+        <div style="font-size:20px; font-family:var(--font-mono); font-weight:600;">${total ? pct + '%' : '-'}</div>
+        ${verdictLine}
+      </div>
+      <div class="streak-row">
+        <div class="streak-cell">
+          <div class="eyebrow">Current Streak</div>
+          <div class="big-num">${current} <span style="font-size:12px;">DAYS</span></div>
+        </div>
+        <div class="streak-cell">
+          <div class="eyebrow">Best Streak</div>
+          <div class="big-num">${best} <span style="font-size:12px;">DAYS</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-box case-box-pad" id="chart-holder">
+      ${renderContributionChart(now.getFullYear(), now.getMonth())}
+      <div class="lock-note">past days are read-only.</div>
+    </div>
+
+    <div class="case-box">
+      <div class="case-box-pad">
+        <div class="section-title">Monthly Progress</div>
+        <div class="section-sub">${prettyMonthYear(now.getFullYear(), now.getMonth())}</div>
+        <div class="stat-grid">
+          <div class="stat-cell"><div class="eyebrow">Average Completion</div><div class="big-num">${ms.avgCompletion}%</div></div>
+          <div class="stat-cell"><div class="eyebrow">Tasks Completed</div><div class="big-num">${ms.tasksCompleted}</div></div>
+          <div class="stat-cell"><div class="eyebrow">Tasks Missed</div><div class="big-num">${ms.tasksMissed}</div></div>
+          <div class="stat-cell"><div class="eyebrow">Successful Days</div><div class="big-num">${ms.successfulDays}/${ms.countedDays}</div></div>
+        </div>
+        <hr class="rule-light">
+        <div class="eyebrow" style="text-align:center;">Month Verdict</div>
+        <div style="text-align:center; font-family:var(--font-sc); font-size:20px; letter-spacing:.08em; margin-top:6px; color:${ms.verdict === 'PASS' ? 'var(--ink)' : 'var(--stamp)'};">${ms.verdict}</div>
+      </div>
+    </div>
+
+    <div class="case-box">
+      <div class="score-box">
+        <div class="eyebrow">Accountability Score</div>
+        <div class="big-num score-num">${score.score} <span style="font-size:16px;">/ 100</span></div>
+        <div class="score-label ${score.cls}">${score.label}</div>
+      </div>
+    </div>
+  `;
+
+  const view = document.getElementById('user-view');
+  view.innerHTML = html;
+
+  view.querySelectorAll('[data-task-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const taskId = btn.getAttribute('data-task-id');
+      const nowDone = rec.statuses[taskId] === true;
+      setTaskStatus(today, taskId, !nowDone);
+      renderUserDashboard();
+    });
+  });
+  bindChartClicks(view);
+}
+
+/* =========================================================
+   RENDER - ADMIN DASHBOARD
+========================================================= */
+let adminUsers = [];       // all accounts (admin only), from GET /api/users
+let viewingEmail = null;   // whose ledger the admin is looking at
+let editingTaskId = null;  // task currently in inline edit mode
+let emailSettings = { morning_hour: 9, evening_hour: 20 }; // email schedule hours
+
+function segHtml(id, current){
+  return `<div class="seg" id="${id}">
+    ${['LOW','MEDIUM','HIGH'].map(v =>
+      `<button type="button" class="seg-btn${v === current ? ' active' : ''}" data-val="${v}">${v.charAt(0) + v.slice(1).toLowerCase()}</button>`
+    ).join('')}
+  </div>`;
+}
+function bindSeg(root, sel){
+  const seg = root.querySelector(sel);
+  seg.querySelectorAll('.seg-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      seg.querySelectorAll('.seg-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+}
+function segValue(root, sel){
+  return root.querySelector(sel + ' .seg-btn.active').getAttribute('data-val');
+}
+
+function renderAdminDashboard(){
+  const now = new Date();
+  const today = formatYMD(now);
+  const todayS = dayStats(today);
+  const ms = monthStats(now.getFullYear(), now.getMonth());
+  const { current } = computeStreaks();
+  const score = accountabilityScore();
+  const sevenDay = last7Average();
+  const subject = adminUsers.find(u => u.email === viewingEmail);
+
+  const taskDefs = state.tasks.length === 0
+    ? `<p style="color:var(--gray-3); font-style:italic; font-family:var(--font-display);">No tasks defined yet.</p>`
+    : state.tasks.slice().reverse().map(t => {
+        if(t.id === editingTaskId){
+          return `
+          <div class="task-def-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div class="field" style="margin-bottom:0;">
+              <label for="edit-name">Task Name</label>
+              <input type="text" id="edit-name" value="${escapeHtml(t.name)}">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label for="edit-time">Expected Time</label>
+              <input type="text" id="edit-time" value="${escapeHtml(t.timeLabel)}">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>Importance</label>
+              ${segHtml('edit-importance-seg', t.importance)}
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-filled btn-sm" data-action="save-edit" data-id="${t.id}">Save</button>
+              <button class="btn btn-ghost btn-sm" data-action="cancel-edit">Cancel</button>
+            </div>
+          </div>`;
+        }
+        return `
+          <div class="task-def-row">
+            <div>
+              <strong>${escapeHtml(t.name)}</strong>
+              <div style="color:var(--gray-4); font-size:10px; margin-top:2px; text-transform:uppercase; letter-spacing:.06em;">${escapeHtml(t.timeLabel)} · since ${prettyDateLong(t.createdDate)}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${importanceBadge(t.importance)}
+              <button class="btn btn-sm" data-action="edit" data-id="${t.id}">Edit</button>
+              <button class="btn btn-ghost btn-sm" data-action="delete" data-id="${t.id}">Delete</button>
+            </div>
+          </div>`;
+      }).join('');
+
+  const subjectOptions = adminUsers.map(u =>
+    `<option value="${escapeHtml(u.email)}"${u.email === viewingEmail ? ' selected' : ''}>${escapeHtml(u.name)} (${u.role})</option>`
+  ).join('');
+
+  const html = `
+    <div class="case-box case-box-pad">
+      <div class="admin-tag">Case File</div>
+      <div class="section-title" style="font-size:20px;">${escapeHtml(subject ? subject.name : 'Subject')}</div>
+      <div class="section-sub">Subject under observation</div>
+
+      <div class="field">
+        <label for="subject-select">Subject</label>
+        <select id="subject-select">${subjectOptions}</select>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-cell"><div class="eyebrow">Today</div><div class="big-num">${todayS.total ? todayS.pct + '%' : '-'}</div><div class="stat-note">${todayS.completed}/${todayS.total} tasks</div></div>
+        <div class="stat-cell"><div class="eyebrow">7-Day Average</div><div class="big-num">${sevenDay}%</div></div>
+        <div class="stat-cell"><div class="eyebrow">Month</div><div class="big-num">${ms.avgCompletion}%</div><div class="stat-note">verdict: ${ms.verdict}</div></div>
+        <div class="stat-cell"><div class="eyebrow">Current Streak</div><div class="big-num">${current} <span style="font-size:11px;">DAYS</span></div></div>
+        <div class="stat-cell"><div class="eyebrow">Missed (Month)</div><div class="big-num">${ms.tasksMissed}</div><div class="stat-note">tasks</div></div>
+        <div class="stat-cell"><div class="eyebrow">Accountability</div><div class="big-num">${score.score}<span style="font-size:11px;"> /100</span></div><div class="stat-note">${score.label}</div></div>
+      </div>
+    </div>
+
+    <div class="case-box case-box-pad" id="admin-chart-holder">
+      ${renderContributionChart(now.getFullYear(), now.getMonth())}
+      <div class="lock-note">tap a day to inspect it.</div>
+    </div>
+
+    <div class="case-box case-box-pad">
+      <div class="section-title">Assign a Task</div>
+      <div class="section-sub">Applies from today onward - history stays untouched.</div>
+      <div class="field">
+        <label for="task-name">Task Name</label>
+        <input type="text" id="task-name" placeholder="e.g. Revise DSA">
+      </div>
+      <div class="field">
+        <label for="task-time">Expected Time</label>
+        <input type="text" id="task-time" placeholder="e.g. 2 hours">
+      </div>
+      <div class="field">
+        <label>Importance</label>
+        ${segHtml('importance-seg', 'MEDIUM')}
+      </div>
+      <button class="btn btn-filled btn-block" id="add-task-btn">Add Task</button>
+      <div class="error-text hidden" id="task-error">Enter a task name and expected time.</div>
+    </div>
+
+    <div class="case-box case-box-pad">
+      <div class="section-title">Today's Tasks</div>
+      <div class="section-sub">${prettyDateLong(today)}</div>
+      ${todayS.total === 0 ? '<p style="color:var(--gray-3); font-style:italic; font-family:var(--font-display);">Nothing assigned for today.</p>' :
+        tasksForDate(today).map(t => {
+          const rec = state.dailyProgress[today];
+          const done = rec && rec.statuses[t.id] === true;
+          return `<div class="task-def-row"><span>${escapeHtml(t.name)}</span><span style="font-weight:700;">${done ? 'DONE' : 'PENDING'}</span></div>`;
+        }).join('')
+      }
+    </div>
+
+    <div class="case-box case-box-pad">
+      <div class="section-title">All Tasks Defined</div>
+      <div class="section-sub">Edits and deletions apply to the whole ledger.</div>
+      ${taskDefs}
+    </div>
+
+    <div class="case-box case-box-pad">
+      <div class="section-title">Email Schedule</div>
+      <div class="section-sub">Daily task email &amp; evening summary - sent via Apps Script.</div>
+      <div style="display:flex; gap:12px;">
+        <div class="field" style="flex:1; margin-bottom:0;">
+          <label for="morning-hour">Morning Hour (0–23)</label>
+          <input type="number" id="morning-hour" min="0" max="23" value="${emailSettings.morning_hour}">
+        </div>
+        <div class="field" style="flex:1; margin-bottom:0;">
+          <label for="evening-hour">Evening Hour (0–23)</label>
+          <input type="number" id="evening-hour" min="0" max="23" value="${emailSettings.evening_hour}">
+        </div>
+      </div>
+      <button class="btn btn-filled btn-block" id="save-schedule-btn" style="margin-top:12px;">Save Schedule</button>
+      <div class="lock-note hidden" id="schedule-success"></div>
+    </div>
+
+    <div class="case-box case-box-pad">
+      <div class="section-title">Create User</div>
+      <div class="section-sub">New accounts can sign in immediately.</div>
+      <div class="field">
+        <label for="new-name">Display Name</label>
+        <input type="text" id="new-name" placeholder="e.g. Rahul">
+      </div>
+      <div class="field">
+        <label for="new-email">Email</label>
+        <input type="email" id="new-email" placeholder="rahul@doordie.app" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="new-password">Password</label>
+        <input type="password" id="new-password" placeholder="min 4 characters" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Role</label>
+        <div class="seg" id="role-seg">
+          <button type="button" class="seg-btn active" data-val="USER">User</button>
+          <button type="button" class="seg-btn" data-val="ADMIN">Admin</button>
+        </div>
+      </div>
+      <button class="btn btn-filled btn-block" id="create-user-btn">Create User</button>
+      <div class="error-text hidden" id="user-error"></div>
+      <div class="lock-note hidden" id="user-success"></div>
+    </div>
+  `;
+
+  const view = document.getElementById('admin-view');
+  view.innerHTML = html;
+
+  // subject switcher
+  view.querySelector('#subject-select').addEventListener('change', async e => {
+    viewingEmail = e.target.value;
+    editingTaskId = null;
+    try{
+      state = await fetchState(viewingEmail);
+      stateOwner = viewingEmail;
+      renderAdminDashboard();
+    }catch(err){
+      console.warn(err);
+    }
+  });
+
+  // add task
+  bindSeg(view, '#importance-seg');
+  view.querySelector('#add-task-btn').addEventListener('click', () => {
+    const nameEl = view.querySelector('#task-name');
+    const timeEl = view.querySelector('#task-time');
+    const errEl = view.querySelector('#task-error');
+    const name = nameEl.value.trim();
+    const time = timeEl.value.trim();
+    if(!name || !time){
+      errEl.classList.remove('hidden');
+      return;
+    }
+    errEl.classList.add('hidden');
+    addTask(name, time, segValue(view, '#importance-seg'));
+    renderAdminDashboard();
+  });
+
+  // task CRUD actions
+  view.querySelectorAll('[data-action]').forEach(btn => {
+    const action = btn.getAttribute('data-action');
+    const id = btn.getAttribute('data-id');
+    if(action === 'edit'){
+      btn.addEventListener('click', () => { editingTaskId = id; renderAdminDashboard(); });
+    } else if(action === 'cancel-edit'){
+      btn.addEventListener('click', () => { editingTaskId = null; renderAdminDashboard(); });
+    } else if(action === 'delete'){
+      btn.addEventListener('click', () => {
+        const t = state.tasks.find(x => x.id === id);
+        if(!t) return;
+        if(!confirm(`Delete "${t.name}"? Past days will no longer count it.`)) return;
+        state.tasks = state.tasks.filter(x => x.id !== id);
+        if(editingTaskId === id) editingTaskId = null;
+        saveState();
+        renderAdminDashboard();
+      });
+    } else if(action === 'save-edit'){
+      btn.addEventListener('click', () => {
+        const t = state.tasks.find(x => x.id === id);
+        if(!t) return;
+        const name = view.querySelector('#edit-name').value.trim();
+        const time = view.querySelector('#edit-time').value.trim();
+        if(!name || !time) return;
+        t.name = name;
+        t.timeLabel = time;
+        t.importance = segValue(view, '#edit-importance-seg');
+        editingTaskId = null;
+        saveState();
+        renderAdminDashboard();
+      });
+    }
+  });
+  if(editingTaskId) bindSeg(view, '#edit-importance-seg');
+
+  // create user
+  bindSeg(view, '#role-seg');
+  view.querySelector('#create-user-btn').addEventListener('click', async () => {
+    const btn = view.querySelector('#create-user-btn');
+    const errEl = view.querySelector('#user-error');
+    const okEl = view.querySelector('#user-success');
+    errEl.classList.add('hidden');
+    okEl.classList.add('hidden');
+    const payload = {
+      name: view.querySelector('#new-name').value,
+      email: view.querySelector('#new-email').value,
+      password: view.querySelector('#new-password').value,
+      role: segValue(view, '#role-seg')
+    };
+    btn.disabled = true;
+    try{
+      const r = await postJson('/api/users', payload);
+      if(r.ok){
+        adminUsers.push(r.data.user);
+        const sel = view.querySelector('#subject-select');
+        sel.insertAdjacentHTML('beforeend',
+          `<option value="${escapeHtml(r.data.user.email)}">${escapeHtml(r.data.user.name)} (${r.data.user.role})</option>`);
+        view.querySelector('#new-name').value = '';
+        view.querySelector('#new-email').value = '';
+        view.querySelector('#new-password').value = '';
+        okEl.textContent = `User "${r.data.user.name}" created.`;
+        okEl.classList.remove('hidden');
+      } else {
+        errEl.textContent = r.data.error || 'Could not create user.';
+        errEl.classList.remove('hidden');
+      }
+    }catch(e){
+      errEl.textContent = 'Cannot reach the server.';
+      errEl.classList.remove('hidden');
+    }finally{
+      btn.disabled = false;
+    }
+  });
+
+  // email schedule
+  view.querySelector('#save-schedule-btn').addEventListener('click', async () => {
+    const btn = view.querySelector('#save-schedule-btn');
+    const okEl = view.querySelector('#schedule-success');
+    okEl.classList.add('hidden');
+    const m = parseInt(view.querySelector('#morning-hour').value, 10);
+    const e = parseInt(view.querySelector('#evening-hour').value, 10);
+    if(!Number.isInteger(m) || m < 0 || m > 23 || !Number.isInteger(e) || e < 0 || e > 23) return;
+    btn.disabled = true;
+    try{
+      const r = await postJson('/api/settings', { morning_hour: m, evening_hour: e });
+      if(r.ok){
+        emailSettings = { morning_hour: m, evening_hour: e };
+        okEl.textContent = 'Schedule saved.';
+        okEl.classList.remove('hidden');
+      }
+    }catch(err){ console.warn(err); }
+    finally{ btn.disabled = false; }
+  });
+
+  bindChartClicks(view);
+}
+
+/* =========================================================
+   UTIL
+========================================================= */
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* =========================================================
+   LOADER - decrypt/scramble effect
+========================================================= */
+const SCRAMBLE_CHARS = '!<>-_\\/[]{}=+*^?#________';
+function scrambleWord(el){
+  const target = el.getAttribute('data-text');
+  const queue = target.split('').map((ch, i) => ({
+    ch,
+    start: i * 4 + Math.floor(Math.random() * 4),
+    end: i * 4 + 9 + Math.floor(Math.random() * 10)
+  }));
+  let frame = 0;
+  return new Promise(resolve => {
+    (function tick(){
+      let out = '', done = 0;
+      for(const q of queue){
+        if(frame >= q.end){ out += q.ch; done++; }
+        else if(frame >= q.start){ out += '<span class="scramble-char">' + SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)] + '</span>'; }
+        else { out += '&nbsp;'; }
+      }
+      el.innerHTML = out;
+      if(done === queue.length) resolve();
+      else { frame++; setTimeout(tick, 45); }
+    })();
+  });
+}
+let loaderRunning = false;
+let loaderShownAt = 0;
+async function runLoader(){
+  loaderRunning = true;
+  loaderShownAt = Date.now();
+  while(loaderRunning){
+    await Promise.all(Array.from(document.querySelectorAll('#loader .ld-word')).map(scrambleWord));
+    await new Promise(r => setTimeout(r, 500));
+  }
+}
+async function hideLoader(){
+  // keep the effect visible for at least ~1.5s even if loading finishes instantly
+  const wait = Math.max(0, 1500 - (Date.now() - loaderShownAt));
+  if(wait) await new Promise(r => setTimeout(r, wait));
+  loaderRunning = false;
+  document.getElementById('loader').classList.add('hidden');
+}
+
+/* =========================================================
+   APP BOOTSTRAP
+========================================================= */
+async function enterApp(user){
+  me = user;
+  showingOwnView = false;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('header-role').textContent = user.name + ' · ' + user.role;
+  document.getElementById('my-day-btn').classList.toggle('hidden', user.role !== 'ADMIN');
+  document.getElementById('my-day-btn').textContent = 'My Day';
+
+  document.getElementById('user-view').classList.toggle('hidden', user.role !== 'USER');
+  document.getElementById('admin-view').classList.toggle('hidden', user.role !== 'ADMIN');
+
+  if(user.role === 'USER'){
+    stateOwner = null;
+    state = await fetchState();
+    renderUserDashboard();
+  } else {
+    const r = await getJson('/api/users');
+    adminUsers = r.ok ? r.data.users : [{ email: user.email, name: user.name, role: 'ADMIN' }];
+    if(!viewingEmail || !adminUsers.some(u => u.email === viewingEmail)) viewingEmail = adminUsers[0].email;
+    const sr = await getJson('/api/settings');
+    if(sr.ok && Number.isInteger(sr.data.morning_hour)) emailSettings = sr.data;
+    state = await fetchState(viewingEmail);
+    stateOwner = viewingEmail;
+    renderAdminDashboard();
+  }
+}
+
+function showLogin(){
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').classList.add('hidden');
+}
+
+function initAuthUI(){
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('login-btn');
+    const errEl = document.getElementById('login-error');
+    if(btn.disabled) return;
+    btn.disabled = true;
+    errEl.classList.add('hidden');
+    document.getElementById('loader').classList.remove('hidden');
+    runLoader();
+    try{
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const user = await attemptLogin(email, password);
+      if(user){
+        await enterApp(user);
+      } else {
+        errEl.textContent = 'Incorrect email or password.';
+        errEl.classList.remove('hidden');
+      }
+    }catch(e){
+      errEl.textContent = 'Cannot reach the server. Please try again.';
+      errEl.classList.remove('hidden');
+    }finally{
+      btn.disabled = false;
+      hideLoader();
+    }
+  });
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if(e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+  document.getElementById('login-email').addEventListener('keydown', e => {
+    if(e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+  document.getElementById('my-day-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('my-day-btn');
+    const uv = document.getElementById('user-view');
+    const av = document.getElementById('admin-view');
+    btn.disabled = true;
+    try{
+      if(!showingOwnView){
+        state = await fetchState(me.email);
+        stateOwner = me.email;
+        av.classList.add('hidden');
+        uv.classList.remove('hidden');
+        renderUserDashboard();
+        btn.textContent = 'Admin Panel';
+        showingOwnView = true;
+      } else {
+        state = await fetchState(viewingEmail);
+        stateOwner = viewingEmail;
+        uv.classList.add('hidden');
+        av.classList.remove('hidden');
+        renderAdminDashboard();
+        btn.textContent = 'My Day';
+        showingOwnView = false;
+      }
+    }catch(e){ console.warn(e); }
+    finally{ btn.disabled = false; }
+  });
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    logout();
+    me = null;
+    viewingEmail = null;
+    editingTaskId = null;
+    state = null;
+    showLogin();
+  });
+}
+
+async function boot(){
+  initAuthUI();
+  runLoader();
+  try{
+    const session = await getSession();
+    if(session) await enterApp(session);
+    else showLogin();
+  }catch(e){
+    showLogin();
+  }
+  hideLoader();
+}
+
+boot();
+</script>
+</body>
+</html>
