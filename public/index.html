@@ -186,9 +186,9 @@ footer{
   font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--gray-3);
 }
 
-/* reveal on scroll */
-.reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
-.reveal.in{ opacity:1; transform:none; }
+/* reveal on scroll (only when JS is running) */
+html.js .reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
+html.js .reveal.in{ opacity:1; transform:none; }
 
 @media (max-width:640px){
   .nav-links a:not(:last-child){ display:none; }
@@ -283,6 +283,7 @@ footer{
 <footer>Do or Die - Accountability Ledger - no editing the past</footer>
 
 <script>
+document.documentElement.classList.add('js');
 const SCRAMBLE_CHARS = '!<>-_\\/[]{}=+*^?#________';
 function scrambleWord(el){
   const target = el.getAttribute('data-text');
@@ -330,11 +331,6 @@ function renderSkull(text){
   pre.innerHTML = out;
 }
 fetch('/skull.txt').then(r => r.text()).then(renderSkull).catch(() => {});
-if(document.fonts && document.fonts.ready){
-  document.fonts.ready.then(buildSkull);
-} else {
-  buildSkull();
-}
 
 // marquee
 const items = ['NO EDITING THE PAST','DAILY VERDICTS','MORNING BRIEFING','EVENING REPORT','STREAKS','ACCOUNTABILITY SCORE'];
@@ -346,6 +342,8 @@ const io = new IntersectionObserver(entries => {
   entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
 }, { threshold: .15 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+// safety net: never leave content hidden
+setTimeout(() => document.querySelectorAll('.reveal:not(.in)').forEach(el => el.classList.add('in')), 1500);
 </script>
 </body>
 </html>
