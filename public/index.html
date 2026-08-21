@@ -88,11 +88,14 @@ nav{
   user-select:none; flex-shrink:0;
 }
 .k-ink{ color:var(--ink); }
-.k-flame{ animation:flame 1.5s ease-in-out infinite; }
+.k-flame{ animation:flame 2.4s ease-in-out infinite; }
 @keyframes flame{
-  0%,100%{ color:#8f2318; }
-  33%{ color:#c0392b; }
-  66%{ color:#e2726a; }
+  0%{ color:var(--ink); }
+  22%{ color:#8f2318; }
+  45%{ color:#c0392b; }
+  68%{ color:#e2726a; }
+  85%{ color:var(--gray-3); }
+  100%{ color:var(--ink); }
 }
 @media (max-width:860px){
   .hero-flex{ flex-direction:column-reverse; gap:30px; }
@@ -318,8 +321,8 @@ function renderSkull(text){
     let col = 0;
     for(const ch of lines[li]){
       if(ch === '¶'){
-        if(li < 9){ // hair / flame rows: flickering red variants
-          out += '<span class="k-flame" style="animation-delay:-' + ((col % 7) * 190) + 'ms">¶</span>';
+        if(li < 10){ // hair / flame rows incl. bottom edge: black-red-ember-gray cycle
+          out += '<span class="k-flame" style="animation-delay:-' + ((col % 7) * 260) + 'ms">¶</span>';
         } else {
           out += '<span class="k-ink">¶</span>';
         }
