@@ -1365,6 +1365,8 @@ function initAuthUI(){
     if(btn.disabled) return;
     btn.disabled = true;
     errEl.classList.add('hidden');
+    document.getElementById('loader').classList.remove('hidden');
+    runLoader();
     try{
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
@@ -1376,10 +1378,11 @@ function initAuthUI(){
         errEl.classList.remove('hidden');
       }
     }catch(e){
-      errEl.textContent = 'Cannot reach the server. Is "node server.mjs" running?';
+      errEl.textContent = 'Cannot reach the server. Please try again.';
       errEl.classList.remove('hidden');
     }finally{
       btn.disabled = false;
+      hideLoader();
     }
   });
   document.getElementById('login-password').addEventListener('keydown', e => {
