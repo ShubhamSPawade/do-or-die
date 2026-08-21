@@ -72,20 +72,6 @@ nav{
   font-family:var(--serif); font-style:italic; font-weight:400;
   font-size:.38em; color:var(--gray-3); margin:0 .25em; vertical-align:middle;
 }
-.sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
-#ascii{
-  font-family:var(--mono); white-space:pre; line-height:1.15;
-  font-size:clamp(5px, 1.75vw, 14px);
-  margin:26px 0 6px; user-select:none;
-}
-#ascii span{ display:inline-block; animation:asciiWave 1.9s ease-in-out infinite; will-change:transform; }
-@keyframes asciiWave{
-  0%,100%{ transform:translateY(0); opacity:1; }
-  50%{ transform:translateY(-3px); opacity:.55; }
-}
-.c-do{ color:var(--ink); }
-.c-or{ color:var(--gray-3); }
-.c-die{ color:var(--stamp); }
 .hero .sub{
   max-width:520px; color:var(--gray-4); font-size:14px; margin:14px auto 34px;
 }
@@ -199,8 +185,7 @@ footer{
 
 <header class="hero">
   <div class="eyebrow">Accountability Ledger</div>
-  <h1 class="sr-only">Do or Die - Accountability Ledger</h1>
-  <pre id="ascii" aria-hidden="true"></pre>
+  <h1><span class="ld-word" data-text="DO">DO</span><span class="or">or</span><span class="ld-word die" data-text="DIE">DIE</span></h1>
   <p class="sub">A no-excuses task ledger. Assign the work, do the work, and let an unforgiving score keep you honest. Yesterday is locked forever.</p>
   <div class="hero-cta">
     <a class="btn btn-red" href="/app.html">Open the Ledger</a>
@@ -266,48 +251,30 @@ footer{
 <footer>Do or Die - Accountability Ledger - no editing the past</footer>
 
 <script>
-// animated ascii banner: DO (ink) or (gray) DIE (red)
-const A_DO = [
-'██████╗  ██████╗ ',
-'██╔══██╗ ██╔══██╗',
-'██║  ██║ ██║  ██║',
-'██║  ██║ ██║  ██║',
-'██████╔╝ ██████╔╝',
-'╚═════╝  ╚═════╝ '];
-const A_OR = [
-' ██████╗  ██████╗ ',
-'██╔═══██╗██╔══██╗',
-'██║   ██║██║  ██║',
-'██║   ██║██║  ██║',
-'╚██████╔╝██████╔╝',
-' ╚═════╝ ╚═════╝ '];
-const A_DIE = [
-'██████╗ ██╗███████╗',
-'██╔══██╗██║██╔════╝',
-'██║  ██║██║███████╗',
-'██║  ██║██║██╔════╝',
-'██████╔╝██║███████╗',
-'╚═════╝ ╚═╝╚══════╝'];
-
-(function buildAscii(){
-  const pre = document.getElementById('ascii');
-  let out = '', col = 0;
-  for(let r = 0; r < A_DO.length; r++){
-    col = 0;
-    const parts = [[A_DO[r], 'c-do'], ['  ', null], [A_OR[r], 'c-or'], ['  ', null], [A_DIE[r], 'c-die']];
-    for(const [text, cls] of parts){
-      for(const ch of text){
-        if(ch === ' '){ out += ' '; }
-        else {
-          out += '<span class="' + cls + '" style="animation-delay:' + (-(col % 12) * 140) + 'ms">' + ch + '</span>';
-        }
-        col++;
+const SCRAMBLE_CHARS = '!<>-_\\/[]{}=+*^?#________';
+function scrambleWord(el){
+  const target = el.getAttribute('data-text');
+  const queue = target.split('').map((ch, i) => ({
+    ch,
+    start: i * 5 + Math.floor(Math.random() * 5),
+    end: i * 5 + 11 + Math.floor(Math.random() * 10)
+  }));
+  let frame = 0;
+  return new Promise(resolve => {
+    (function tick(){
+      let out = '', done = 0;
+      for(const q of queue){
+        if(frame >= q.end){ out += q.ch; done++; }
+        else if(frame >= q.start){ out += '<span style="opacity:.4">' + SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)] + '</span>'; }
+        else { out += '&nbsp;'; }
       }
-    }
-    out += '\n';
-  }
-  pre.innerHTML = out;
-})();
+      el.innerHTML = out;
+      if(done === queue.length) resolve();
+      else { frame++; setTimeout(tick, 48); }
+    })();
+  });
+}
+Promise.all(Array.from(document.querySelectorAll('.ld-word')).map(scrambleWord));
 
 // marquee
 const items = ['NO EDITING THE PAST','DAILY VERDICTS','MORNING BRIEFING','EVENING REPORT','STREAKS','ACCOUNTABILITY SCORE'];
