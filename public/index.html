@@ -84,7 +84,12 @@ nav{
   user-select:none; flex-shrink:0;
 }
 .k-ink{ color:var(--ink); }
-.k-red{ color:var(--stamp); }
+.k-flame{ animation:flame 1.5s ease-in-out infinite; }
+@keyframes flame{
+  0%,100%{ color:#8f2318; }
+  33%{ color:#c0392b; }
+  66%{ color:#e2726a; }
+}
 @media (max-width:860px){
   .hero-flex{ flex-direction:column-reverse; gap:30px; }
   .hero-left{ align-items:center; text-align:center; }
@@ -344,11 +349,18 @@ const SKULL = [
 (function buildSkull(){
   const pre = document.getElementById('skull');
   let out = '';
-  for(const line of SKULL){
-    for(const ch of line){
-      if(ch === '¶') out += '<span class="k-ink">¶</span>';
-      else if(ch === '´') out += '<span class="k-red">´</span>';
-      else out += ch;
+  for(let li = 0; li < SKULL.length; li++){
+    let col = 0;
+    for(const ch of SKULL[li]){
+      if(ch === '¶'){
+        if(li < 9){ // hair / flame rows: flickering red variants
+          out += '<span class="k-flame" style="animation-delay:-' + ((col % 7) * 190) + 'ms">¶</span>';
+        } else {
+          out += '<span class="k-ink">¶</span>';
+        }
+      } else if(ch === '´'){ out += ' '; }
+      else { out += ch; }
+      col++;
     }
     out += '\n';
   }
