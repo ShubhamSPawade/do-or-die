@@ -308,68 +308,28 @@ function scrambleWord(el){
 }
 Promise.all(Array.from(document.querySelectorAll('.ld-word')).map(scrambleWord));
 
-// static two-tone skull: black strokes on red shading
-const SKULL = [
-'¶         ¶',
-'                         ¶         ¶',
-'                     ¶   ¶         ¶   ¶',
-'                     ¶  ¶¶         ¶¶  ¶',
-'                     ¶¶ ¶¶¶       ¶¶¶ ¶¶',
-'             ¶      ¶¶   ¶¶¶     ¶¶¶   ¶¶      ¶',
-'            ¶¶      ¶¶   ¶¶¶     ¶¶¶   ¶¶      ¶¶',
-'           ¶¶      ¶¶    ¶¶¶¶   ¶¶¶¶    ¶¶      ¶¶',
-'           ¶¶     ¶¶¶    ¶¶¶¶  ¶¶¶¶¶    ¶¶¶     ¶¶¶',
-'       ¶  ¶¶¶    ¶¶¶¶    ¶¶¶¶   ¶¶¶¶    ¶¶¶¶   ¶¶¶¶  ¶',
-'       ¶¶ ¶¶¶¶¶  ¶¶¶¶   ¶¶¶¶¶   ¶¶¶¶¶   ¶¶¶¶  ¶¶¶¶¶ ¶¶',
-'       ¶¶ ¶¶¶¶¶  ¶¶¶¶¶¶¶¶¶¶¶     ¶¶¶¶¶¶¶¶¶¶¶  ¶¶¶¶¶ ¶¶',
-'       ¶¶ ¶¶¶¶¶  ¶¶¶¶¶¶¶¶¶¶¶     ¶¶¶¶¶¶¶¶¶¶¶  ¶¶¶¶¶ ¶¶',
-'      ¶¶¶  ¶¶¶¶   ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶   ¶¶¶¶  ¶¶¶',
-'     ¶¶¶¶  ¶¶¶¶   ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶   ¶¶¶¶  ¶¶¶¶',
-'    ¶¶¶¶   ¶¶¶¶¶ ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶ ¶¶¶¶¶   ¶¶¶¶',
-'   ¶¶¶¶    ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶   ¶¶¶¶',
-'   ¶¶¶¶¶  ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶  ¶¶¶¶',
-'    ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶',
-'    ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶',
-'     ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶',
-'     ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶',
-'      ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶',
-'     ¶¶¶¶¶           ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶           ¶¶¶¶¶',
-'     ¶¶¶¶¶¶             ¶¶¶¶¶¶¶¶¶¶¶¶¶             ¶¶¶¶¶¶',
-'      ¶¶¶¶¶¶¶        ..     ¶¶¶¶¶¶¶¶¶     ..        ¶¶¶¶¶¶',
-'       ¶¶¶¶¶¶¶¶             ¶¶¶¶¶             ¶¶¶¶¶¶¶¶',
-'        ¶¶¶¶¶¶¶¶¶¶           ¶¶¶           ¶¶¶¶¶¶¶¶¶¶',
-'           ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶',
-'              ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶   ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶',
-'                  ¶¶¶¶¶¶¶¶¶¶     ¶¶¶¶¶¶¶¶¶¶',
-'                   ¶¶¶¶¶¶¶¶       ¶¶¶¶¶¶¶¶',
-'                  ¶¶¶¶¶¶¶¶¶       ¶¶¶¶¶¶¶¶¶',
-'                  ¶¶¶¶¶¶¶¶¶       ¶¶¶¶¶¶¶¶¶',
-'                  ¶¶¶¶¶¶¶¶¶ ¶¶¶¶¶ ¶¶¶¶¶¶¶¶¶',
-'                 ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶',
-'                 ¶¶¶  ¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶  ¶¶¶',
-'                  ¶¶  ¶¶¶¶  ¶¶¶¶¶  ¶¶¶¶  ¶¶',
-'                      ¶¶¶¶  ¶¶¶¶¶  ¶¶¶¶'
-];
-function buildSkull(){
+// skull art loaded from skull.txt (exact source, no transcription drift)
+function renderSkull(text){
   const pre = document.getElementById('skull');
+  const lines = text.replace(/\r/g, '').split('\n');
   let out = '';
-  for(let li = 0; li < SKULL.length; li++){
+  for(let li = 0; li < lines.length; li++){
     let col = 0;
-    for(const ch of SKULL[li]){
+    for(const ch of lines[li]){
       if(ch === '¶'){
         if(li < 9){ // hair / flame rows: flickering red variants
           out += '<span class="k-flame" style="animation-delay:-' + ((col % 7) * 190) + 'ms">¶</span>';
         } else {
           out += '<span class="k-ink">¶</span>';
         }
-      } else { out += ' '; }
+      } else { out += ch; }
       col++;
     }
     out += '\n';
   }
   pre.innerHTML = out;
 }
-// wait for the real monospace font before drawing: prevents fallback-font misalignment
+fetch('/skull.txt').then(r => r.text()).then(renderSkull).catch(() => {});
 if(document.fonts && document.fonts.ready){
   document.fonts.ready.then(buildSkull);
 } else {
