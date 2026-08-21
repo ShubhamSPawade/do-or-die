@@ -326,7 +326,8 @@ function renderSkull(text){
         const d = Math.abs(col - 31);            // distance from skull center
         const limit = 12 + Math.min(3, Math.round(d / 8));
         if(li < limit){
-          out += '<span class="k-flame" style="animation-delay:-' + ((col % 7) * 260) + 'ms">¶</span>';
+          // independent random phase per character: true char-wise flicker
+          out += '<span class="k-flame" style="animation-delay:-' + Math.floor(Math.random() * 2400) + 'ms">¶</span>';
         } else {
           out += '<span class="k-ink">¶</span>';
         }
