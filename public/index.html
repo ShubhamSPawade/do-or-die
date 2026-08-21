@@ -531,6 +531,7 @@ input, select{ font-family:inherit; }
       <div class="header-mark">Do or Die</div>
       <div class="header-right">
         <span class="header-role" id="header-role"></span>
+        <button class="btn btn-ghost hidden" id="my-day-btn">My Day</button>
         <button class="btn btn-ghost" id="logout-btn">Log Out</button>
       </div>
     </div>
@@ -554,6 +555,8 @@ input, select{ font-family:inherit; }
 const SESSION_KEY = 'doOrDie_session_v1';
 let state = null;        // ledger of the user currently being viewed
 let stateOwner = null;   // email of that user
+let me = null;           // signed-in user
+let showingOwnView = false; // admin toggled to their personal dashboard
 
 function authHeaders(){
   const h = { 'Content-Type': 'application/json' };
@@ -1320,9 +1323,13 @@ function hideLoader(){
    APP BOOTSTRAP
 ========================================================= */
 async function enterApp(user){
+  me = user;
+  showingOwnView = false;
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('header-role').textContent = user.name + ' · ' + user.role;
+  document.getElementById('my-day-btn').classList.toggle('hidden', user.role !== 'ADMIN');
+  document.getElementById('my-day-btn').textContent = 'My Day';
 
   document.getElementById('user-view').classList.toggle('hidden', user.role !== 'USER');
   document.getElementById('admin-view').classList.toggle('hidden', user.role !== 'ADMIN');
@@ -1381,8 +1388,35 @@ function initAuthUI(){
   document.getElementById('login-email').addEventListener('keydown', e => {
     if(e.key === 'Enter') document.getElementById('login-btn').click();
   });
+  document.getElementById('my-day-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('my-day-btn');
+    const uv = document.getElementById('user-view');
+    const av = document.getElementById('admin-view');
+    btn.disabled = true;
+    try{
+      if(!showingOwnView){
+        state = await fetchState(me.email);
+        stateOwner = me.email;
+        av.classList.add('hidden');
+        uv.classList.remove('hidden');
+        renderUserDashboard();
+        btn.textContent = 'Admin Panel';
+        showingOwnView = true;
+      } else {
+        state = await fetchState(viewingEmail);
+        stateOwner = viewingEmail;
+        uv.classList.add('hidden');
+        av.classList.remove('hidden');
+        renderAdminDashboard();
+        btn.textContent = 'My Day';
+        showingOwnView = false;
+      }
+    }catch(e){ console.warn(e); }
+    finally{ btn.disabled = false; }
+  });
   document.getElementById('logout-btn').addEventListener('click', () => {
     logout();
+    me = null;
     viewingEmail = null;
     editingTaskId = null;
     state = null;
