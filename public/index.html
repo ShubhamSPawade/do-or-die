@@ -321,7 +321,11 @@ function renderSkull(text){
     let col = 0;
     for(const ch of lines[li]){
       if(ch === '¶'){
-        if(li < 10){ // hair / flame rows incl. bottom edge: black-red-ember-gray cycle
+        // flame zone follows the arc: hair sits lower at the left/right edges,
+        // so the cutoff deepens toward the sides instead of being a flat row cut
+        const d = Math.abs(col - 31);            // distance from skull center
+        const limit = 12 + Math.min(3, Math.round(d / 8));
+        if(li < limit){
           out += '<span class="k-flame" style="animation-delay:-' + ((col % 7) * 260) + 'ms">¶</span>';
         } else {
           out += '<span class="k-ink">¶</span>';
