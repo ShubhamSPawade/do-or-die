@@ -78,10 +78,20 @@ nav{
 }
 .hero-left{ display:flex; flex-direction:column; align-items:flex-start; text-align:left; }
 .hero-left .sub{ margin:14px 0 30px; }
+.skull-box{
+  border:1px solid var(--line);
+  background:var(--bg);
+  padding:24px;
+  flex-shrink:0;
+  box-shadow:6px 6px 0 var(--ink);
+}
 #skull{
-  font-family:var(--mono); white-space:pre; line-height:1.04;
-  font-size:clamp(4px, 1.02vw, 12px);
-  user-select:none; flex-shrink:0;
+  font-family:'JetBrains Mono', 'Courier New', monospace;
+  font-size:11px;              /* fixed size: no fractional scaling distortion */
+  line-height:1.05;
+  letter-spacing:0;
+  white-space:pre;
+  user-select:none;
 }
 .k-ink{ color:var(--ink); }
 .k-flame{ animation:flame 1.5s ease-in-out infinite; }
@@ -93,7 +103,8 @@ nav{
 @media (max-width:860px){
   .hero-flex{ flex-direction:column-reverse; gap:30px; }
   .hero-left{ align-items:center; text-align:center; }
-  #skull{ font-size:clamp(4px, 2vw, 9px); }
+  .skull-box{ padding:14px; }
+  #skull{ font-size:6px; }
 }
 .hero .sub{
   max-width:520px; color:var(--gray-4); font-size:14px; margin:14px auto 34px;
@@ -217,7 +228,9 @@ footer{
         <a class="btn" href="#how">See how it works</a>
       </div>
     </div>
-    <pre id="skull" aria-hidden="true"></pre>
+    <div class="skull-box">
+      <pre id="skull" aria-hidden="true"></pre>
+    </div>
   </div>
   <div class="hero-stats reveal">
     <div class="hstat"><b>2</b><span>emails / day</span></div>
