@@ -1307,14 +1307,19 @@ function scrambleWord(el){
   });
 }
 let loaderRunning = false;
+let loaderShownAt = 0;
 async function runLoader(){
   loaderRunning = true;
+  loaderShownAt = Date.now();
   while(loaderRunning){
     await Promise.all(Array.from(document.querySelectorAll('#loader .ld-word')).map(scrambleWord));
     await new Promise(r => setTimeout(r, 500));
   }
 }
-function hideLoader(){
+async function hideLoader(){
+  // keep the effect visible for at least ~1.5s even if loading finishes instantly
+  const wait = Math.max(0, 1500 - (Date.now() - loaderShownAt));
+  if(wait) await new Promise(r => setTimeout(r, wait));
   loaderRunning = false;
   document.getElementById('loader').classList.add('hidden');
 }
