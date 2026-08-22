@@ -189,6 +189,29 @@ footer{
   font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--gray-3);
 }
 
+/* boot loader */
+#loader{
+  position:fixed; inset:0;
+  background:var(--paper);
+  z-index:200;
+  display:flex; align-items:center; justify-content:center;
+}
+.loader-mark{
+  font-family:var(--sc); font-size:46px; letter-spacing:.08em;
+  text-align:center; white-space:nowrap;
+}
+.ld-do{ color:var(--ink); }
+.ld-die{ color:var(--stamp); }
+.ld-or{
+  color:var(--gray-3); font-family:var(--serif);
+  font-style:italic; font-size:24px; margin:0 12px;
+}
+.loader-sub{
+  margin-top:12px; text-align:center; font-size:10px;
+  letter-spacing:.3em; text-transform:uppercase; color:var(--gray-4);
+}
+#loader .scramble-char{ opacity:.45; }
+
 /* reveal on scroll (only when JS is running) */
 html.js .reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
 html.js .reveal.in{ opacity:1; transform:none; }
@@ -201,6 +224,13 @@ html.js .reveal.in{ opacity:1; transform:none; }
 </style>
 </head>
 <body>
+
+<div id="loader">
+  <div>
+    <div class="loader-mark"><span class="ld-word ld-do" data-text="DO">&nbsp;</span><span class="ld-or">or</span><span class="ld-word ld-die" data-text="DIE">&nbsp;</span></div>
+    <div class="loader-sub">Accountability Ledger</div>
+  </div>
+</div>
 
 <nav>
   <div class="nav-inner">
@@ -310,7 +340,21 @@ function scrambleWord(el){
     })();
   });
 }
-Promise.all(Array.from(document.querySelectorAll('.ld-word')).map(scrambleWord));
+// boot loader: loop the decrypt effect until the page is ready
+let loaderRunning = true;
+function hideLoader(){
+  loaderRunning = false;
+  document.getElementById('loader').classList.add('hidden');
+}
+(async function loaderLoop(){
+  while(loaderRunning){
+    await Promise.all(Array.from(document.querySelectorAll('#loader .ld-word')).map(scrambleWord));
+    await new Promise(r => setTimeout(r, 400));
+  }
+})();
+
+// hero title decrypt
+Promise.all(Array.from(document.querySelectorAll('.hero .ld-word')).map(scrambleWord));
 
 // skull art loaded from skull.txt (exact source, no transcription drift)
 function renderSkull(text){
@@ -338,7 +382,13 @@ function renderSkull(text){
   }
   pre.innerHTML = out;
 }
-fetch('/skull.txt').then(r => r.text()).then(renderSkull).catch(() => {});
+const skullReady = fetch('/skull.txt').then(r => r.text()).then(renderSkull).catch(() => {});
+// hide loader once fonts + art are ready (minimum 1.5s so the effect is visible)
+Promise.all([
+  document.fonts ? document.fonts.ready : Promise.resolve(),
+  skullReady,
+  new Promise(r => setTimeout(r, 1500))
+]).then(hideLoader);
 
 // marquee
 const items = ['NO EDITING THE PAST','DAILY VERDICTS','MORNING BRIEFING','EVENING REPORT','STREAKS','ACCOUNTABILITY SCORE'];
