@@ -932,9 +932,9 @@ function renderUserDashboard(){
       <div class="error-text hidden" id="my-task-error">Enter a task name and expected time.</div>
     </div>
 
-    <div class="dash-grid">
+<div class="dash-grid">
 
-    <div class="case-box">
+    <div class="case-box dash-today">
       <div class="case-box-pad">
         <div class="section-title">Today - ${prettyDateLong(today)}</div>
         <div class="section-sub">Mark today's tasks. Nothing else can be touched.</div>
@@ -942,7 +942,7 @@ function renderUserDashboard(){
       </div>
     </div>
 
-    <div class="case-box">
+    <div class="case-box dash-hero">
       <div class="today-hero">
         <div class="eyebrow">Today</div>
         <span class="big-num">${completed} / ${total}</span>
@@ -961,12 +961,12 @@ function renderUserDashboard(){
       </div>
     </div>
 
-    <div class="case-box case-box-pad" id="chart-holder">
+    <div class="case-box case-box-pad dash-chart" id="chart-holder">
       ${renderContributionChart(now.getFullYear(), now.getMonth())}
       <div class="lock-note">past days are read-only.</div>
     </div>
 
-    <div class="case-box">
+    <div class="case-box dash-monthly">
       <div class="case-box-pad">
         <div class="section-title">Monthly Progress</div>
         <div class="section-sub">${prettyMonthYear(now.getFullYear(), now.getMonth())}</div>
@@ -981,9 +981,8 @@ function renderUserDashboard(){
         <div style="text-align:center; font-family:var(--font-sc); font-size:20px; letter-spacing:.08em; margin-top:6px; color:${ms.verdict === 'PASS' ? 'var(--ink)' : 'var(--stamp)'};">${ms.verdict}</div>
       </div>
     </div>
-    </div>
 
-    <div class="case-box case-box-pad">
+    <div class="case-box case-box-pad dash-sched">
       <div class="section-title">Email Schedule</div>
       <div class="section-sub">Your personal daily emails (Apps Script).</div>
       <div style="display:flex; gap:12px;">
@@ -1000,7 +999,7 @@ function renderUserDashboard(){
       <div class="lock-note hidden" id="my-schedule-success"></div>
     </div>
 
-    <div class="case-box">
+    <div class="case-box dash-score">
       <div class="score-box">
         <div class="eyebrow">Accountability Score</div>
         <div class="big-num score-num">${score.score} <span style="font-size:16px;">/ 100</span></div>
