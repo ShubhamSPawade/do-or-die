@@ -37,3 +37,8 @@ create table if not exists settings (
 insert into settings (id, morning_hour, evening_hour)
 values (true, 9, 20)
 on conflict (id) do nothing;
+create table if not exists email_settings (
+  user_email   text primary key references users(email) on delete cascade,
+  morning_hour int not null default 9,
+  evening_hour int not null default 20
+);

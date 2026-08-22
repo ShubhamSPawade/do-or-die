@@ -17,6 +17,8 @@
 const SUPABASE_URL = 'PASTE_YOUR_PROJECT_URL';
 const SERVICE_ROLE_KEY = 'PASTE_YOUR_SERVICE_ROLE_KEY';
 
+
+
 // ---------- Supabase helpers ----------
 
 function sb_(path){
@@ -36,6 +38,12 @@ function todayStr_(){
 function getSettings_(){
   const rows = sb_('settings?id=eq.true&select=morning_hour,evening_hour');
   return rows[0] || { morning_hour: 9, evening_hour: 20 };
+}
+
+// per-user hours; falls back to global defaults
+function getUserHours_(email){
+  const rows = sb_('email_settings?user_email=eq.' + encodeURIComponent(email) + '&select=morning_hour,evening_hour');
+  return rows[0] || null;
 }
 
 function getUsers_(){
@@ -70,9 +78,12 @@ function installTriggers(){
 
 function hourlyTick(){
   const hour = Number(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'H'));
-  const s = getSettings_();
-  if(hour === Number(s.morning_hour)) sendMorningEmails();
-  if(hour === Number(s.evening_hour)) sendEveningEmails();
+  const defaults = getSettings_();
+  getUsers_().forEach(function(u){
+    const h = getUserHours_(u.email) || defaults;
+    if(hour === Number(h.morning_hour)) sendMorningTo_(u);
+    if(hour === Number(h.evening_hour)) sendEveningTo_(u);
+  });
 }
 
 // ---------- Emails ----------
@@ -101,71 +112,75 @@ function taskTable_(tasks){
 }
 
 function sendMorningEmails(){
+  getUsers_().forEach(sendMorningTo_);
+}
+
+function sendMorningTo_(u){
   const today = todayStr_();
-  getUsers_().forEach(function(u){
-    const ledger = getLedger_(u.email);
-    const tasks = tasksForToday_(ledger, today);
-    let body;
-    if(tasks.length === 0){
-      body = '<p><b>' + u.name + '</b>, no tasks are assigned for today.</p>';
-    } else {
-      body = '<p><b>' + u.name + '</b>, here is what you owe today (' + today + '):</p>' +
-        taskTable_(tasks) +
-        '<p style="color:' + RED + ';font-style:italic;margin-top:16px;">You can improve tomorrow. You cannot rewrite yesterday.</p>';
-    }
-    MailApp.sendEmail({ to: u.email, subject: 'DO OR DIE — Your tasks for ' + today, htmlBody: wrap_(body) });
-  });
+  const ledger = getLedger_(u.email);
+  const tasks = tasksForToday_(ledger, today);
+  let body;
+  if(tasks.length === 0){
+    body = '<p><b>' + u.name + '</b>, no tasks are assigned for today.</p>';
+  } else {
+    body = '<p><b>' + u.name + '</b>, here is what you owe today (' + today + '):</p>' +
+      taskTable_(tasks) +
+      '<p style="color:' + RED + ';font-style:italic;margin-top:16px;">You can improve tomorrow. You cannot rewrite yesterday.</p>';
+  }
+  MailApp.sendEmail({ to: u.email, subject: 'DO OR DIE - Your tasks for ' + today, htmlBody: wrap_(body) });
 }
 
 function sendEveningEmails(){
+  getUsers_().forEach(sendEveningTo_);
+}
+
+function sendEveningTo_(u){
   const today = todayStr_();
-  getUsers_().forEach(function(u){
-    const ledger = getLedger_(u.email);
-    const tasks = tasksForToday_(ledger, today);
-    if(tasks.length === 0) return; // nothing assigned -> nothing to report
+  const ledger = getLedger_(u.email);
+  const tasks = tasksForToday_(ledger, today);
+  if(tasks.length === 0) return; // nothing assigned -> nothing to report
 
-    const completed = [], pending = [], untouched = [];
-    tasks.forEach(function(t){
-      const st = statusFor_(ledger, today, t.id);
-      if(st === true) completed.push(t);
-      else if(st === false) pending.push(t);
-      else untouched.push(t);
-    });
-
-    const total = tasks.length;
-    const doneCount = completed.length;
-    const pct = Math.round((doneCount / total) * 100);
-    const notUpdatedAtAll = (completed.length + pending.length) === 0;
-
-    let message, color = '#111111';
-    if(notUpdatedAtAll){
-      message = "You haven't updated your progress today. Open DO OR DIE and mark your tasks before the day closes.";
-      color = RED;
-    } else if(pct === 100){
-      message = '100% complete. Outstanding discipline — every task accounted for. Keep the streak alive.';
-    } else if(doneCount === 0){
-      message = '0% completed. You are falling behind. Do not let today slip away.';
-      color = RED;
-    } else {
-      message = pct + '% done. Still pending: ' +
-        pending.concat(untouched).map(function(t){ return t.name; }).join(', ') + '.';
-      color = RED;
-    }
-
-    let body = '<p>Evening report for <b>' + today + '</b></p>' +
-      '<div style="font-size:34px;font-weight:bold;">' + doneCount + ' / ' + total +
-      ' <span style="font-size:16px;">(' + pct + '%)</span></div>';
-
-    if(completed.length){
-      body += '<p style="margin-bottom:4px;"><b>Completed</b></p><ul style="margin-top:0;">' +
-        completed.map(function(t){ return '<li>' + t.name + '</li>'; }).join('') + '</ul>';
-    }
-    if(pending.length || untouched.length){
-      body += '<p style="margin-bottom:4px;"><b>Pending</b></p><ul style="margin-top:0;">' +
-        pending.concat(untouched).map(function(t){ return '<li>' + t.name + '</li>'; }).join('') + '</ul>';
-    }
-
-    body += '<p style="font-weight:bold;color:' + color + ';margin-top:16px;">' + message + '</p>';
-    MailApp.sendEmail({ to: u.email, subject: 'DO OR DIE — Evening report ' + today, htmlBody: wrap_(body) });
+  const completed = [], pending = [], untouched = [];
+  tasks.forEach(function(t){
+    const st = statusFor_(ledger, today, t.id);
+    if(st === true) completed.push(t);
+    else if(st === false) pending.push(t);
+    else untouched.push(t);
   });
+
+  const total = tasks.length;
+  const doneCount = completed.length;
+  const pct = Math.round((doneCount / total) * 100);
+  const notUpdatedAtAll = (completed.length + pending.length) === 0;
+
+  let message, color = '#111111';
+  if(notUpdatedAtAll){
+    message = "You haven't updated your progress today. Open DO OR DIE and mark your tasks before the day closes.";
+    color = RED;
+  } else if(pct === 100){
+    message = '100% complete. Outstanding discipline - every task accounted for. Keep the streak alive.';
+  } else if(doneCount === 0){
+    message = '0% completed. You are falling behind. Do not let today slip away.';
+    color = RED;
+  } else {
+    message = pct + '% done. Still pending: ' +
+      pending.concat(untouched).map(function(t){ return t.name; }).join(', ') + '.';
+    color = RED;
+  }
+
+  let body = '<p>Evening report for <b>' + today + '</b></p>' +
+    '<div style="font-size:34px;font-weight:bold;">' + doneCount + ' / ' + total +
+    ' <span style="font-size:16px;">(' + pct + '%)</span></div>';
+
+  if(completed.length){
+    body += '<p style="margin-bottom:4px;"><b>Completed</b></p><ul style="margin-top:0;">' +
+      completed.map(function(t){ return '<li>' + t.name + '</li>'; }).join('') + '</ul>';
+  }
+  if(pending.length || untouched.length){
+    body += '<p style="margin-bottom:4px;"><b>Pending</b></p><ul style="margin-top:0;">' +
+      pending.concat(untouched).map(function(t){ return '<li>' + t.name + '</li>'; }).join('') + '</ul>';
+  }
+
+  body += '<p style="font-weight:bold;color:' + color + ';margin-top:16px;">' + message + '</p>';
+  MailApp.sendEmail({ to: u.email, subject: 'DO OR DIE - Evening report ' + today, htmlBody: wrap_(body) });
 }

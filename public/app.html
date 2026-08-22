@@ -509,6 +509,10 @@ input, select{ font-family:inherit; }
     <div class="wordmark">Do or Die</div>
     <div class="wordmark-sub">Accountability Ledger</div>
 
+    <div class="field hidden" id="name-field">
+      <label for="login-name">Display Name</label>
+      <input type="text" id="login-name" autocomplete="name">
+    </div>
     <div class="field">
       <label for="login-email">Email</label>
       <input type="email" id="login-email" autocomplete="username">
@@ -519,6 +523,7 @@ input, select{ font-family:inherit; }
     </div>
     <button class="btn btn-filled btn-block" id="login-btn">Sign In</button>
     <div class="error-text hidden" id="login-error">Incorrect email or password.</div>
+    <p class="lock-note" style="margin-top:14px;"><a href="#" id="mode-toggle" style="color:var(--stamp); text-decoration:underline;">New here? Create account</a></p>
 
     <p class="login-tenet">"You can improve tomorrow.<br>You cannot rewrite yesterday."</p>
   </div>
@@ -557,6 +562,9 @@ let state = null;        // ledger of the user currently being viewed
 let stateOwner = null;   // email of that user
 let me = null;           // signed-in user
 let showingOwnView = false; // admin toggled to their personal dashboard
+let myEmailSettings = { morning_hour: 9, evening_hour: 20 };
+let myEditingTaskId = null;
+let signupMode = false;
 
 function authHeaders(){
   const h = { 'Content-Type': 'application/json' };
@@ -857,8 +865,20 @@ function renderUserDashboard(){
   const score = accountabilityScore();
 
   const taskRows = tasks.length === 0
-    ? `<p style="color:var(--gray-3); font-style:italic; font-family:var(--font-display);">No tasks assigned yet. Check back once the admin adds today's work.</p>`
+    ? `<p style="color:var(--gray-3); font-style:italic; font-family:var(--font-display);">No tasks yet. Add your first one below.</p>`
     : tasks.map(t => {
+        if(t.id === myEditingTaskId){
+          return `
+          <div class="task-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div class="field" style="margin-bottom:0;"><label>Task Name</label><input type="text" id="my-edit-name" value="${escapeHtml(t.name)}"></div>
+            <div class="field" style="margin-bottom:0;"><label>Expected Time</label><input type="text" id="my-edit-time" value="${escapeHtml(t.timeLabel)}"></div>
+            <div class="field" style="margin-bottom:0;"><label>Importance</label>${segHtml('my-edit-importance-seg', t.importance)}</div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-filled btn-sm" data-action="save-my-edit" data-id="${t.id}">Save</button>
+              <button class="btn btn-ghost btn-sm" data-action="cancel-my-edit">Cancel</button>
+            </div>
+          </div>`;
+        }
         const done = rec.statuses[t.id] === true;
         return `
         <div class="task-row">
@@ -869,8 +889,10 @@ function renderUserDashboard(){
               ${importanceBadge(t.importance)}
             </div>
           </div>
-          <div class="task-toggle">
+          <div class="task-toggle" style="display:flex; gap:6px; align-items:center; min-width:auto;">
             <button class="btn ${done ? 'btn-done' : ''}" data-task-id="${t.id}">${done ? 'Done' : 'Mark Done'}</button>
+            <button class="btn btn-sm" data-action="edit" data-id="${t.id}">Edit</button>
+            <button class="btn btn-ghost btn-sm" data-action="delete" data-id="${t.id}">Delete</button>
           </div>
         </div>`;
       }).join('');
@@ -881,6 +903,25 @@ function renderUserDashboard(){
   else if(pct < 50){ verdictLine = `<div class="verdict-line verdict-bad">YOU ARE FALLING BEHIND</div>`; }
 
   const html = `
+    <div class="case-box case-box-pad">
+      <div class="section-title">Add a Task</div>
+      <div class="section-sub">Your own work, from today onward.</div>
+      <div class="field">
+        <label for="my-task-name">Task Name</label>
+        <input type="text" id="my-task-name" placeholder="e.g. Revise DSA">
+      </div>
+      <div class="field">
+        <label for="my-task-time">Expected Time</label>
+        <input type="text" id="my-task-time" placeholder="e.g. 2 hours">
+      </div>
+      <div class="field">
+        <label>Importance</label>
+        ${segHtml('my-importance-seg', 'MEDIUM')}
+      </div>
+      <button class="btn btn-filled btn-block" id="my-add-task-btn">Add Task</button>
+      <div class="error-text hidden" id="my-task-error">Enter a task name and expected time.</div>
+    </div>
+
     <div class="case-box">
       <div class="case-box-pad">
         <div class="section-title">Today - ${prettyDateLong(today)}</div>
@@ -929,6 +970,23 @@ function renderUserDashboard(){
       </div>
     </div>
 
+    <div class="case-box case-box-pad">
+      <div class="section-title">Email Schedule</div>
+      <div class="section-sub">Your personal daily emails (Apps Script).</div>
+      <div style="display:flex; gap:12px;">
+        <div class="field" style="flex:1; margin-bottom:0;">
+          <label for="my-morning-hour">Morning Hour (0-23)</label>
+          <input type="number" id="my-morning-hour" min="0" max="23" value="${myEmailSettings.morning_hour}">
+        </div>
+        <div class="field" style="flex:1; margin-bottom:0;">
+          <label for="my-evening-hour">Evening Hour (0-23)</label>
+          <input type="number" id="my-evening-hour" min="0" max="23" value="${myEmailSettings.evening_hour}">
+        </div>
+      </div>
+      <button class="btn btn-filled btn-block" id="my-save-schedule-btn" style="margin-top:12px;">Save Schedule</button>
+      <div class="lock-note hidden" id="my-schedule-success"></div>
+    </div>
+
     <div class="case-box">
       <div class="score-box">
         <div class="eyebrow">Accountability Score</div>
@@ -940,6 +998,73 @@ function renderUserDashboard(){
 
   const view = document.getElementById('user-view');
   view.innerHTML = html;
+
+  // self task crud
+  bindSeg(view, '#my-importance-seg');
+  view.querySelector('#my-add-task-btn').addEventListener('click', () => {
+    const name = view.querySelector('#my-task-name').value.trim();
+    const time = view.querySelector('#my-task-time').value.trim();
+    const errEl = view.querySelector('#my-task-error');
+    if(!name || !time){ errEl.classList.remove('hidden'); return; }
+    errEl.classList.add('hidden');
+    addTask(name, time, segValue(view, '#my-importance-seg'));
+    renderUserDashboard();
+  });
+
+  view.querySelectorAll('[data-action]').forEach(btn => {
+    const action = btn.getAttribute('data-action');
+    const id = btn.getAttribute('data-id');
+    if(action === 'edit'){
+      btn.addEventListener('click', () => { myEditingTaskId = id; renderUserDashboard(); });
+    } else if(action === 'cancel-my-edit'){
+      btn.addEventListener('click', () => { myEditingTaskId = null; renderUserDashboard(); });
+    } else if(action === 'delete'){
+      btn.addEventListener('click', () => {
+        const t = state.tasks.find(x => x.id === id);
+        if(!t) return;
+        if(!confirm(`Delete "${t.name}"? Past days will no longer count it.`)) return;
+        state.tasks = state.tasks.filter(x => x.id !== id);
+        if(myEditingTaskId === id) myEditingTaskId = null;
+        saveState();
+        renderUserDashboard();
+      });
+    } else if(action === 'save-my-edit'){
+      btn.addEventListener('click', () => {
+        const t = state.tasks.find(x => x.id === id);
+        if(!t) return;
+        const name = view.querySelector('#my-edit-name').value.trim();
+        const time = view.querySelector('#my-edit-time').value.trim();
+        if(!name || !time) return;
+        t.name = name;
+        t.timeLabel = time;
+        t.importance = segValue(view, '#my-edit-importance-seg');
+        myEditingTaskId = null;
+        saveState();
+        renderUserDashboard();
+      });
+    }
+  });
+  if(myEditingTaskId && document.getElementById('my-edit-name')) bindSeg(view, '#my-edit-importance-seg');
+
+  // personal email schedule
+  view.querySelector('#my-save-schedule-btn').addEventListener('click', async () => {
+    const sBtn = view.querySelector('#my-save-schedule-btn');
+    const okEl = view.querySelector('#my-schedule-success');
+    okEl.classList.add('hidden');
+    const m = parseInt(view.querySelector('#my-morning-hour').value, 10);
+    const e2 = parseInt(view.querySelector('#my-evening-hour').value, 10);
+    if(!Number.isInteger(m) || m < 0 || m > 23 || !Number.isInteger(e2) || e2 < 0 || e2 > 23) return;
+    sBtn.disabled = true;
+    try{
+      const r = await postJson('/api/my-settings', { morning_hour: m, evening_hour: e2 });
+      if(r.ok){
+        myEmailSettings = { morning_hour: m, evening_hour: e2 };
+        okEl.textContent = 'Schedule saved.';
+        okEl.classList.remove('hidden');
+      }
+    }catch(err){ console.warn(err); }
+    finally{ sBtn.disabled = false; }
+  });
 
   view.querySelectorAll('[data-task-id]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1341,6 +1466,8 @@ async function enterApp(user){
 
   if(user.role === 'USER'){
     stateOwner = null;
+    const sr = await getJson('/api/my-settings');
+    if(sr.ok && Number.isInteger(sr.data.morning_hour)) myEmailSettings = sr.data;
     state = await fetchState();
     renderUserDashboard();
   } else {
@@ -1364,9 +1491,17 @@ function showLogin(){
 }
 
 function initAuthUI(){
-  document.getElementById('login-btn').addEventListener('click', async () => {
-    const btn = document.getElementById('login-btn');
-    const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  document.getElementById('mode-toggle').addEventListener('click', e => {
+    e.preventDefault();
+    signupMode = !signupMode;
+    document.getElementById('name-field').classList.toggle('hidden', !signupMode);
+    btn.textContent = signupMode ? 'Create Account' : 'Sign In';
+    document.getElementById('mode-toggle').textContent = signupMode ? 'Have an account? Sign In' : 'New here? Create account';
+    errEl.classList.add('hidden');
+  });
+  btn.addEventListener('click', async () => {
     if(btn.disabled) return;
     btn.disabled = true;
     errEl.classList.add('hidden');
@@ -1375,13 +1510,25 @@ function initAuthUI(){
     try{
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
-      const user = await attemptLogin(email, password);
-      if(user){
-        await enterApp(user);
+      let user;
+      if(signupMode){
+        const name = document.getElementById('login-name').value;
+        const r = await postJson('/api/register', { name, email, password });
+        if(r.ok){
+          localStorage.setItem(SESSION_KEY, r.data.token);
+          user = r.data;
+        } else {
+          errEl.textContent = r.data.error || 'Could not create account.';
+          errEl.classList.remove('hidden');
+        }
       } else {
-        errEl.textContent = 'Incorrect email or password.';
-        errEl.classList.remove('hidden');
+        user = await attemptLogin(email, password);
+        if(!user){
+          errEl.textContent = 'Incorrect email or password.';
+          errEl.classList.remove('hidden');
+        }
       }
+      if(user) await enterApp(user);
     }catch(e){
       errEl.textContent = 'Cannot reach the server. Please try again.';
       errEl.classList.remove('hidden');
@@ -1427,6 +1574,11 @@ function initAuthUI(){
     me = null;
     viewingEmail = null;
     editingTaskId = null;
+    myEditingTaskId = null;
+    signupMode = false;
+    document.getElementById('name-field').classList.add('hidden');
+    document.getElementById('login-btn').textContent = 'Sign In';
+    document.getElementById('mode-toggle').textContent = 'New here? Create account';
     state = null;
     showLogin();
   });
