@@ -22,7 +22,12 @@ app.use('/api', userRoutes);
 app.use('/api', stateRoutes);
 app.use('/api', settingsRoutes);
 
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// always revalidate HTML so deploys reach users immediately
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+  setHeaders(res, filePath){
+    if(filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
