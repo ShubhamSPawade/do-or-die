@@ -10,13 +10,53 @@ let me = null;           // signed-in user
 let showingOwnView = false; // admin toggled to their personal dashboard
 let myEmailSettings = { morning_hour: 9, evening_hour: 20 };
 let myEditingTaskId = null;
-let signupMode = false;
+let authMode = 'signin'; // 'signin' | 'signup' | 'forgot'
 
 // admin-only globals
 let adminUsers = [];       // all accounts (admin only), from GET /api/users
 let viewingEmail = null;   // whose ledger the admin is looking at
 let editingTaskId = null;  // task currently in inline edit mode
 let emailSettings = { morning_hour: 9, evening_hour: 20 }; // email schedule hours
+
+/* --- Auth Mode Switcher --- */
+function setAuthMode(mode){
+  authMode = mode;
+  const btn = document.getElementById('login-btn');
+  const nameField = document.getElementById('name-field');
+  const pwdLabel = document.getElementById('password-label');
+  const subEl = document.getElementById('login-sub');
+  const modeToggle = document.getElementById('mode-toggle');
+  const forgotToggle = document.getElementById('forgot-toggle');
+  const errEl = document.getElementById('login-error');
+  const okEl = document.getElementById('login-success');
+
+  errEl.classList.add('hidden');
+  if(okEl) okEl.classList.add('hidden');
+
+  if(mode === 'signup'){
+    nameField.classList.remove('hidden');
+    pwdLabel.textContent = 'Password';
+    btn.textContent = 'Create Account';
+    subEl.textContent = 'Create Your Account';
+    modeToggle.textContent = 'Have an account? Sign In';
+    forgotToggle.classList.add('hidden');
+  } else if(mode === 'forgot'){
+    nameField.classList.add('hidden');
+    pwdLabel.textContent = 'New Password';
+    btn.textContent = 'Reset Password';
+    subEl.textContent = 'Reset Your Password';
+    modeToggle.textContent = 'Back to Sign In';
+    forgotToggle.classList.add('hidden');
+  } else {
+    authMode = 'signin';
+    nameField.classList.add('hidden');
+    pwdLabel.textContent = 'Password';
+    btn.textContent = 'Sign In';
+    subEl.textContent = 'Accountability Ledger';
+    modeToggle.textContent = 'New here? Create account';
+    forgotToggle.classList.remove('hidden');
+  }
+}
 
 /* --- Enter the App --- */
 async function enterApp(user){
@@ -55,7 +95,7 @@ function showLogin(){
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('login-email').value = '';
   document.getElementById('login-password').value = '';
-  document.getElementById('login-error').classList.add('hidden');
+  setAuthMode('signin');
 }
 
 /* --- Wire Up Auth UI --- */
@@ -65,11 +105,13 @@ function initAuthUI(){
 
   document.getElementById('mode-toggle').addEventListener('click', e => {
     e.preventDefault();
-    signupMode = !signupMode;
-    document.getElementById('name-field').classList.toggle('hidden', !signupMode);
-    btn.textContent = signupMode ? 'Create Account' : 'Sign In';
-    document.getElementById('mode-toggle').textContent = signupMode ? 'Have an account? Sign In' : 'New here? Create account';
-    errEl.classList.add('hidden');
+    if(authMode === 'signin') setAuthMode('signup');
+    else setAuthMode('signin');
+  });
+
+  document.getElementById('forgot-toggle').addEventListener('click', e => {
+    e.preventDefault();
+    setAuthMode('forgot');
   });
 
   btn.addEventListener('click', async () => {
@@ -79,10 +121,11 @@ function initAuthUI(){
     document.getElementById('loader').classList.remove('hidden');
     runLoader();
     try{
-      const email = document.getElementById('login-email').value;
+      const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       let user;
-      if(signupMode){
+
+      if(authMode === 'signup'){
         const name = document.getElementById('login-name').value;
         const r = await postJson('/api/register', { name, email, password });
         if(r.ok){
@@ -90,6 +133,15 @@ function initAuthUI(){
           user = r.data;
         } else {
           errEl.textContent = r.data.error || 'Could not create account.';
+          errEl.classList.remove('hidden');
+        }
+      } else if(authMode === 'forgot'){
+        const r = await postJson('/api/reset-password', { email, password });
+        if(r.ok){
+          localStorage.setItem(SESSION_KEY, r.data.token);
+          user = r.data;
+        } else {
+          errEl.textContent = r.data.error || 'Could not reset password.';
           errEl.classList.remove('hidden');
         }
       } else {
@@ -149,10 +201,6 @@ function initAuthUI(){
     viewingEmail = null;
     editingTaskId = null;
     myEditingTaskId = null;
-    signupMode = false;
-    document.getElementById('name-field').classList.add('hidden');
-    document.getElementById('login-btn').textContent = 'Sign In';
-    document.getElementById('mode-toggle').textContent = 'New here? Create account';
     state = null;
     showLogin();
   });

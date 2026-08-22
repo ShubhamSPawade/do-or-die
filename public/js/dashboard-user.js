@@ -148,7 +148,7 @@ function renderUserDashboard(){
             </div>
             <hr class="rule-light">
             <div class="eyebrow" style="text-align:center;">Month Verdict</div>
-            <div style="text-align:center; font-family:var(--font-sc); font-size:20px; letter-spacing:.08em; margin-top:6px; color:${ms.verdict === 'PASS' ? 'var(--ink)' : 'var(--stamp)'};">${ms.verdict}</div>
+            <div style="text-align:center; font-family:var(--font-sc); font-size:20px; letter-spacing:.08em; margin-top:6px; color:${ms.verdict === 'PASS' ? 'var(--ink)' : (ms.verdict === 'PENDING' ? 'var(--gray-4)' : 'var(--stamp)')};">${ms.verdict}</div>
           </div>
         </div>
       </div>

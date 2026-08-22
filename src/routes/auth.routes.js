@@ -58,6 +58,36 @@ router.post('/register', loginLimiter, async (req, res, next) => {
   } catch(err){ next(err); }
 });
 
+router.post('/reset-password', loginLimiter, async (req, res, next) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const password = String(req.body?.password || req.body?.new_password || '');
+
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email.' });
+    if(password.length < 4) return res.status(400).json({ error: 'Password must be at least 4 characters.' });
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('email, name, role')
+      .eq('email', email)
+      .single();
+
+    if(error || !user) return res.status(404).json({ error: 'No account found with that email.' });
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const { error: updateErr } = await supabase
+      .from('users')
+      .update({ password_hash })
+      .eq('email', email);
+
+    if(updateErr) throw updateErr;
+
+    const payload = { email: user.email, role: user.role, name: user.name };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ ok: true, token, ...payload });
+  } catch(err){ next(err); }
+});
+
 router.post('/session', (req, res) => {
   try {
     const user = jwt.verify(String(req.body?.token || ''), process.env.JWT_SECRET);

@@ -27,7 +27,7 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="wordmark">Do or Die</div>
-    <div class="wordmark-sub">Accountability Ledger</div>
+    <div class="wordmark-sub" id="login-sub">Accountability Ledger</div>
 
     <div class="field hidden" id="name-field">
       <label for="login-name">Display Name</label>
@@ -37,13 +37,18 @@
       <label for="login-email">Email</label>
       <input type="email" id="login-email" autocomplete="username">
     </div>
-    <div class="field">
-      <label for="login-password">Password</label>
+    <div class="field" id="password-field">
+      <label for="login-password" id="password-label">Password</label>
       <input type="password" id="login-password" autocomplete="current-password">
     </div>
     <button class="btn btn-filled btn-block" id="login-btn">Sign In</button>
     <div class="error-text hidden" id="login-error">Incorrect email or password.</div>
-    <p class="lock-note" style="margin-top:14px;"><a href="#" id="mode-toggle" style="color:var(--stamp); text-decoration:underline;">New here? Create account</a></p>
+    <div class="lock-note hidden" id="login-success" style="color:var(--ink); margin-top:8px;"></div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:10px;">
+      <a href="#" id="mode-toggle" style="color:var(--stamp); text-decoration:underline;">New here? Create account</a>
+      <a href="#" id="forgot-toggle" style="color:var(--gray-4); text-decoration:underline;">Forgot password?</a>
+    </div>
 
     <p class="login-tenet">"You can improve tomorrow.<br>You cannot rewrite yesterday."</p>
   </div>

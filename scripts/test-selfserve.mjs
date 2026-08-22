@@ -20,6 +20,18 @@ function check(name, cond, extra){ if(cond){ pass++; console.log('PASS ' + name)
   r = await post('/api/login', { email: mk('a'), password: 'test123' });
   check('registered user can login', r.s === 200);
 
+  // --- reset password (forgot password) ---
+  r = await post('/api/reset-password', { email: mk('a'), password: 'newpassword456' });
+  check('reset password', r.s === 200 && r.d.ok && r.d.token, JSON.stringify(r.d));
+  r = await post('/api/login', { email: mk('a'), password: 'newpassword456' });
+  check('login with new password', r.s === 200);
+  r = await post('/api/login', { email: mk('a'), password: 'test123' });
+  check('old password rejected', r.s === 401);
+  r = await post('/api/reset-password', { email: 'nonexistent@doordie.app', password: 'newpass123' });
+  check('nonexistent email reset rejected', r.s === 404);
+  r = await post('/api/reset-password', { email: mk('a'), password: 'ab' });
+  check('short new password rejected', r.s === 400);
+
   // second user for isolation checks
   r = await post('/api/register', { email: mk('b'), password: 'test123', name: 'QA B' });
   const B = r.d.token;

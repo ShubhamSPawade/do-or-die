@@ -107,13 +107,17 @@ function monthStats(year, month){
     }
   }
   const avg = totalSum ? Math.round((completedSum / totalSum) * 100) : 0;
+  let verdict = 'PENDING';
+  if(totalSum > 0){
+    verdict = avg >= 80 ? 'PASS' : 'FAILED';
+  }
   return {
     avgCompletion: avg,
     tasksCompleted: completedSum,
     tasksMissed: totalSum - completedSum,
     successfulDays,
     countedDays,
-    verdict: avg >= 80 ? 'PASS' : 'FAILED'
+    verdict
   };
 }
 
