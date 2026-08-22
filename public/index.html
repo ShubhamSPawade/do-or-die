@@ -1,408 +1,897 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DO OR DIE - Accountability Ledger</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Spectral+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#ffffff; --paper:#f4f4f2; --ink:#111111; --line:#171717;
-  --gray-1:#ececea; --gray-2:#cfcfcb; --gray-3:#9c9c96; --gray-4:#55554f;
-  --stamp:#8f2318;
-  --serif:'Spectral',Georgia,serif;
-  --sc:'Spectral SC',Georgia,serif;
-  --mono:'JetBrains Mono','Courier New',monospace;
-}
-*{ box-sizing:border-box; margin:0; }
-.hidden{ display:none !important; }
-html{ scroll-behavior:smooth; }
-body{
-  background:var(--paper); color:var(--ink);
-  font-family:var(--mono); font-size:14px; line-height:1.6;
-  -webkit-font-smoothing:antialiased; overflow-x:hidden;
-}
-::selection{ background:var(--ink); color:var(--bg); }
-a{ color:inherit; text-decoration:none; }
-.wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DO OR DIE - Daily Task Accountability Tracker</title>
+  <meta name="description"
+    content="DO OR DIE is a no-excuses daily task accountability tracker. Assign tasks, track completion, get daily email verdicts, and build streaks. Yesterday is locked forever. Free and open source.">
+  <meta name="keywords"
+    content="accountability tracker, daily task tracker, habit tracker, productivity app, task management, streak tracker, do or die, accountability ledger, daily planner, goal tracker">
+  <meta name="author" content="Do or Die">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#111111">
+  <link rel="canonical" href="https://doordie.app/">
 
-/* nav */
-nav{
-  position:fixed; top:0; left:0; right:0; z-index:50;
-  background:rgba(244,244,242,.85); backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--line);
-}
-.nav-inner{
-  max-width:1080px; margin:0 auto; padding:14px 24px;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.mark{ font-family:var(--sc); font-size:18px; letter-spacing:.06em; }
-.mark .die{ color:var(--stamp); }
-.nav-links{ display:flex; gap:26px; align-items:center; font-size:11px; letter-spacing:.12em; text-transform:uppercase; }
-.nav-links a{ color:var(--gray-4); transition:color .2s; }
-.nav-links a:hover{ color:var(--ink); }
-.nav-links a.btn-filled, .nav-links a.btn-filled:hover{ color:var(--bg); }
-.btn{
-  font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
-  font-weight:700; padding:10px 18px; border:1px solid var(--line);
-  background:var(--bg); color:var(--ink); cursor:pointer; transition:all .2s;
-}
-.btn:hover{ background:var(--ink); color:var(--bg); }
-.btn-filled{ background:var(--ink); color:var(--bg); }
-.btn-filled:hover{ background:var(--stamp); border-color:var(--stamp); }
-.btn-red{ background:var(--stamp); border-color:var(--stamp); color:#fff; }
-.btn-red:hover{ background:var(--ink); border-color:var(--ink); }
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="DO OR DIE - Daily Task Accountability Tracker">
+  <meta property="og:description"
+    content="A no-excuses task ledger. Assign the work, do the work, and let an unforgiving score keep you honest. Yesterday is locked forever.">
+  <meta property="og:site_name" content="Do or Die">
+  <meta property="og:locale" content="en_US">
 
-/* hero */
-.hero{
-  min-height:100vh; display:flex; flex-direction:column;
-  justify-content:center; align-items:center; text-align:center;
-  padding:120px 24px 60px; position:relative;
-}
-.eyebrow{
-  font-size:10px; letter-spacing:.3em; text-transform:uppercase;
-  color:var(--gray-4); font-weight:700;
-}
-.hero h1{
-  font-family:var(--sc); font-size:clamp(46px, 7.5vw, 96px);
-  line-height:1; letter-spacing:.04em; margin:18px 0 8px;
-}
-.hero h1 .die{ color:var(--stamp); }
-.hero h1 .or{
-  font-family:var(--serif); font-style:italic; font-weight:400;
-  font-size:.38em; color:var(--gray-3); margin:0 .25em; vertical-align:middle;
-}
-.hero-flex{
-  display:flex; align-items:center; justify-content:center;
-  gap:56px; width:100%; max-width:1100px;
-}
-.hero-left{ display:flex; flex-direction:column; align-items:flex-start; text-align:left; }
-.hero-left .sub{ margin:14px 0 30px; }
-#skull{
-  font-family:'JetBrains Mono', 'Courier New', monospace;
-  font-size:12px;              /* fixed integer px: clean glyph grid */
-  line-height:1.1;
-  letter-spacing:0;
-  font-variant-ligatures:none; /* stop ligature glyphs from merging chars */
-  white-space:pre;
-  user-select:none; flex-shrink:0;
-}
-.k-ink{ color:var(--gray-4); }
-.k-flame{ animation:flame 2.4s ease-in-out infinite; }
-@keyframes flame{
-  0%{ color:var(--gray-4); }
-  22%{ color:#8f2318; }
-  45%{ color:#c0392b; }
-  68%{ color:#e2726a; }
-  85%{ color:var(--gray-3); }
-  100%{ color:var(--gray-4); }
-}
-@media (max-width:860px){
-  .hero-flex{ flex-direction:column-reverse; gap:30px; }
-  .hero-left{ align-items:center; text-align:center; }
-  #skull{ font-size:7px; }
-}
-.hero .sub{
-  max-width:520px; color:var(--gray-4); font-size:14px; margin:14px auto 34px;
-}
-.hero-cta{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
-.hero-stats{
-  display:flex; gap:0; margin-top:70px; border:1px solid var(--line); background:var(--bg);
-}
-.hstat{ padding:18px 30px; text-align:center; }
-.hstat + .hstat{ border-left:1px solid var(--line); }
-.hstat b{ display:block; font-family:var(--serif); font-size:24px; font-weight:600; }
-.hstat span{ font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--gray-3); }
-.scroll-hint{
-  position:absolute; bottom:28px; left:50%; transform:translateX(-50%);
-  font-size:9px; letter-spacing:.3em; text-transform:uppercase; color:var(--gray-3);
-  animation:bob 2s ease-in-out infinite;
-}
-@keyframes bob{ 0%,100%{ transform:translate(-50%,0);} 50%{ transform:translate(-50%,8px);} }
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DO OR DIE - Daily Task Accountability Tracker">
+  <meta name="twitter:description"
+    content="A no-excuses task ledger. Assign the work, do the work, and let an unforgiving score keep you honest.">
 
-/* marquee */
-.marquee{
-  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
-  background:var(--ink); color:var(--paper); overflow:hidden; white-space:nowrap;
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "DO OR DIE",
+  "alternateName": "Do or Die Accountability Ledger",
+  "description": "A no-excuses daily task accountability tracker with immutable history, daily email verdicts, streak tracking, and an unforgiving accountability score out of 100.",
+  "applicationCategory": "ProductivityApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Immutable daily task history",
+    "Daily morning and evening email reports",
+    "Accountability score out of 100",
+    "Streak tracking",
+    "Contribution chart",
+    "Admin and user roles",
+    "Self-hosted with Supabase"
+  ]
 }
-.marquee-track{
-  display:inline-block; padding:12px 0;
-  animation:slide 28s linear infinite;
-  font-family:var(--sc); font-size:13px; letter-spacing:.22em;
-}
-.marquee-track .dot{ color:var(--stamp); margin:0 22px; }
-@keyframes slide{ from{ transform:translateX(0);} to{ transform:translateX(-50%);} }
+</script>
 
-/* sections */
-section{ padding:110px 0; }
-.sec-head{ margin-bottom:56px; }
-.sec-title{
-  font-family:var(--serif); font-size:clamp(30px,4.5vw,44px); font-weight:600;
-  line-height:1.15; margin-top:12px;
-}
-.sec-title em{ font-style:italic; color:var(--stamp); }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Spectral+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --paper: #f4f4f2;
+      --ink: #111111;
+      --line: #171717;
+      --gray-1: #ececea;
+      --gray-2: #cfcfcb;
+      --gray-3: #9c9c96;
+      --gray-4: #55554f;
+      --stamp: #8f2318;
+      --serif: 'Spectral', Georgia, serif;
+      --sc: 'Spectral SC', Georgia, serif;
+      --mono: 'JetBrains Mono', 'Courier New', monospace;
+    }
 
-/* features */
-.grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); }
-.card{
-  background:var(--bg); padding:34px 28px; transition:transform .25s, box-shadow .25s;
-  position:relative;
-}
-.card:hover{ transform:translateY(-6px); box-shadow:6px 6px 0 var(--ink); z-index:1; }
-.card .num{
-  font-family:var(--mono); font-size:10px; letter-spacing:.2em; color:var(--stamp); font-weight:700;
-}
-.card h3{ font-family:var(--serif); font-size:20px; font-weight:600; margin:12px 0 10px; }
-.card p{ font-size:12.5px; color:var(--gray-4); }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+    }
 
-/* steps */
-.steps{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:40px; }
-.step .big{
-  font-family:var(--sc); font-size:64px; line-height:1; color:var(--gray-2);
-  transition:color .3s;
-}
-.step:hover .big{ color:var(--stamp); }
-.step h3{ font-family:var(--serif); font-size:21px; font-weight:600; margin:14px 0 8px; }
-.step p{ font-size:12.5px; color:var(--gray-4); }
+    .hidden {
+      display: none !important;
+    }
 
-/* quote */
-.quote{
-  background:var(--ink); color:var(--paper); text-align:center;
-}
-.quote blockquote{
-  font-family:var(--serif); font-style:italic; font-weight:400;
-  font-size:clamp(24px,4vw,40px); line-height:1.35; max-width:760px; margin:0 auto;
-}
-.quote blockquote strong{ color:#e58a80; font-weight:400; }
-.quote .who{ margin-top:26px; font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:var(--gray-3); }
+    html {
+      scroll-behavior: smooth;
+    }
 
-/* cta */
-.cta-box{ text-align:center; padding:110px 24px; }
-.cta-box h2{
-  font-family:var(--sc); font-size:clamp(36px,7vw,72px); letter-spacing:.05em; line-height:1.05;
-}
-.cta-box h2 .die{ color:var(--stamp); }
-.cta-box p{ color:var(--gray-4); margin:18px auto 34px; max-width:460px; font-size:13px; }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
 
-footer{
-  border-top:1px solid var(--line); padding:26px 24px; text-align:center;
-  font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--gray-3);
-}
+    ::selection {
+      background: var(--ink);
+      color: var(--bg);
+    }
 
-/* boot loader */
-#loader{
-  position:fixed; inset:0;
-  background:var(--paper);
-  z-index:200;
-  display:flex; align-items:center; justify-content:center;
-}
-.loader-mark{
-  font-family:var(--sc); font-size:46px; letter-spacing:.08em;
-  text-align:center; white-space:nowrap;
-}
-.ld-do{ color:var(--ink); }
-.ld-die{ color:var(--stamp); }
-.ld-or{
-  color:var(--gray-3); font-family:var(--serif);
-  font-style:italic; font-size:24px; margin:0 12px;
-}
-.loader-sub{
-  margin-top:12px; text-align:center; font-size:10px;
-  letter-spacing:.3em; text-transform:uppercase; color:var(--gray-4);
-}
-#loader .scramble-char{ opacity:.45; }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-/* reveal on scroll (only when JS is running) */
-html.js .reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
-html.js .reveal.in{ opacity:1; transform:none; }
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
 
-@media (max-width:640px){
-  .nav-links a:not(:last-child){ display:none; }
-  .hero-stats{ flex-direction:column; }
-  .hstat + .hstat{ border-left:0; border-top:1px solid var(--line); }
-}
-</style>
+    /* nav */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: rgba(244, 244, 242, .85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mark {
+      font-family: var(--sc);
+      font-size: 18px;
+      letter-spacing: .06em;
+    }
+
+    .mark .die {
+      color: var(--stamp);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 26px;
+      align-items: center;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .nav-links a {
+      color: var(--gray-4);
+      transition: color .2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--ink);
+    }
+
+    .nav-links a.btn-filled,
+    .nav-links a.btn-filled:hover {
+      color: var(--bg);
+    }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 10px 18px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--ink);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .btn:hover {
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    .btn-filled {
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    .btn-filled:hover {
+      background: var(--stamp);
+      border-color: var(--stamp);
+    }
+
+    .btn-red {
+      background: var(--stamp);
+      border-color: var(--stamp);
+      color: #fff;
+    }
+
+    .btn-red:hover {
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+
+    /* hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 24px 60px;
+      position: relative;
+    }
+
+    .eyebrow {
+      font-size: 10px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gray-4);
+      font-weight: 700;
+    }
+
+    .hero h1 {
+      font-family: var(--sc);
+      font-size: clamp(46px, 7.5vw, 96px);
+      line-height: 1;
+      letter-spacing: .04em;
+      margin: 18px 0 8px;
+    }
+
+    .hero h1 .die {
+      color: var(--stamp);
+    }
+
+    .hero h1 .or {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: .38em;
+      color: var(--gray-3);
+      margin: 0 .25em;
+      vertical-align: middle;
+    }
+
+    .hero-flex {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 56px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .hero-left .sub {
+      margin: 14px 0 30px;
+    }
+
+    #skull {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 12px;
+      /* fixed integer px: clean glyph grid */
+      line-height: 1.1;
+      letter-spacing: 0;
+      font-variant-ligatures: none;
+      /* stop ligature glyphs from merging chars */
+      white-space: pre;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .k-ink {
+      color: var(--gray-4);
+    }
+
+    .k-flame {
+      animation: flame 2.4s ease-in-out infinite;
+    }
+
+    @keyframes flame {
+      0% {
+        color: var(--gray-4);
+      }
+
+      22% {
+        color: #8f2318;
+      }
+
+      45% {
+        color: #c0392b;
+      }
+
+      68% {
+        color: #e2726a;
+      }
+
+      85% {
+        color: var(--gray-3);
+      }
+
+      100% {
+        color: var(--gray-4);
+      }
+    }
+
+    @media (max-width:860px) {
+      .hero-flex {
+        flex-direction: column-reverse;
+        gap: 30px;
+      }
+
+      .hero-left {
+        align-items: center;
+        text-align: center;
+      }
+
+      #skull {
+        font-size: 7px;
+      }
+    }
+
+    .hero .sub {
+      max-width: 520px;
+      color: var(--gray-4);
+      font-size: 14px;
+      margin: 14px auto 34px;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 0;
+      margin-top: 70px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+    }
+
+    .hstat {
+      padding: 18px 30px;
+      text-align: center;
+    }
+
+    .hstat+.hstat {
+      border-left: 1px solid var(--line);
+    }
+
+    .hstat b {
+      display: block;
+      font-family: var(--serif);
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .hstat span {
+      font-size: 9px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+      animation: bob 2s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+
+      0%,
+      100% {
+        transform: translate(-50%, 0);
+      }
+
+      50% {
+        transform: translate(-50%, 8px);
+      }
+    }
+
+    /* marquee */
+    .marquee {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--ink);
+      color: var(--paper);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .marquee-track {
+      display: inline-block;
+      padding: 12px 0;
+      animation: slide 28s linear infinite;
+      font-family: var(--sc);
+      font-size: 13px;
+      letter-spacing: .22em;
+    }
+
+    .marquee-track .dot {
+      color: var(--stamp);
+      margin: 0 22px;
+    }
+
+    @keyframes slide {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* sections */
+    section {
+      padding: 110px 0;
+    }
+
+    .sec-head {
+      margin-bottom: 56px;
+    }
+
+    .sec-title {
+      font-family: var(--serif);
+      font-size: clamp(30px, 4.5vw, 44px);
+      font-weight: 600;
+      line-height: 1.15;
+      margin-top: 12px;
+    }
+
+    .sec-title em {
+      font-style: italic;
+      color: var(--stamp);
+    }
+
+    /* features */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .card {
+      background: var(--bg);
+      padding: 34px 28px;
+      transition: transform .25s, box-shadow .25s;
+      position: relative;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 6px 6px 0 var(--ink);
+      z-index: 1;
+    }
+
+    .card .num {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .2em;
+      color: var(--stamp);
+      font-weight: 700;
+    }
+
+    .card h3 {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 600;
+      margin: 12px 0 10px;
+    }
+
+    .card p {
+      font-size: 12.5px;
+      color: var(--gray-4);
+    }
+
+    /* steps */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 40px;
+    }
+
+    .step .big {
+      font-family: var(--sc);
+      font-size: 64px;
+      line-height: 1;
+      color: var(--gray-2);
+      transition: color .3s;
+    }
+
+    .step:hover .big {
+      color: var(--stamp);
+    }
+
+    .step h3 {
+      font-family: var(--serif);
+      font-size: 21px;
+      font-weight: 600;
+      margin: 14px 0 8px;
+    }
+
+    .step p {
+      font-size: 12.5px;
+      color: var(--gray-4);
+    }
+
+    /* quote */
+    .quote {
+      background: var(--ink);
+      color: var(--paper);
+      text-align: center;
+    }
+
+    .quote blockquote {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(24px, 4vw, 40px);
+      line-height: 1.35;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .quote blockquote strong {
+      color: #e58a80;
+      font-weight: 400;
+    }
+
+    .quote .who {
+      margin-top: 26px;
+      font-size: 10px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+    }
+
+    /* cta */
+    .cta-box {
+      text-align: center;
+      padding: 110px 24px;
+    }
+
+    .cta-box h2 {
+      font-family: var(--sc);
+      font-size: clamp(36px, 7vw, 72px);
+      letter-spacing: .05em;
+      line-height: 1.05;
+    }
+
+    .cta-box h2 .die {
+      color: var(--stamp);
+    }
+
+    .cta-box p {
+      color: var(--gray-4);
+      margin: 18px auto 34px;
+      max-width: 460px;
+      font-size: 13px;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 26px 24px;
+      text-align: center;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+    }
+
+    /* boot loader */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: var(--paper);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loader-mark {
+      font-family: var(--sc);
+      font-size: 46px;
+      letter-spacing: .08em;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .ld-do {
+      color: var(--ink);
+    }
+
+    .ld-die {
+      color: var(--stamp);
+    }
+
+    .ld-or {
+      color: var(--gray-3);
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 24px;
+      margin: 0 12px;
+    }
+
+    .loader-sub {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 10px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gray-4);
+    }
+
+    #loader .scramble-char {
+      opacity: .45;
+    }
+
+    /* reveal on scroll (only when JS is running) */
+    html.js .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+
+    html.js .reveal.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (max-width:640px) {
+      .nav-links a:not(:last-child) {
+        display: none;
+      }
+
+      .hero-stats {
+        flex-direction: column;
+      }
+
+      .hstat+.hstat {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div id="loader">
-  <div>
-    <div class="loader-mark"><span class="ld-word ld-do" data-text="DO">&nbsp;</span><span class="ld-or">or</span><span class="ld-word ld-die" data-text="DIE">&nbsp;</span></div>
-    <div class="loader-sub">Accountability Ledger</div>
-  </div>
-</div>
-
-<nav>
-  <div class="nav-inner">
-    <a class="mark" href="/">DO <span style="color:var(--gray-3)">or</span> <span class="die">DIE</span></a>
-    <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#how">How it works</a>
-      <a href="/app.html" class="btn btn-filled">Open App</a>
+  <div id="loader">
+    <div>
+      <div class="loader-mark"><span class="ld-word ld-do" data-text="DO">&nbsp;</span><span
+          class="ld-or">or</span><span class="ld-word ld-die" data-text="DIE">&nbsp;</span></div>
+      <div class="loader-sub">Accountability Ledger</div>
     </div>
   </div>
-</nav>
 
-<header class="hero">
-  <div class="hero-flex">
-    <div class="hero-left">
-      <div class="eyebrow">Accountability Ledger</div>
-      <h1><span class="ld-word" data-text="DO">DO</span><span class="or">or</span><span class="ld-word die" data-text="DIE">DIE</span></h1>
-      <p class="sub">A no-excuses task ledger. Assign the work, do the work, and let an unforgiving score keep you honest. Yesterday is locked forever.</p>
-      <div class="hero-cta">
-        <a class="btn btn-red" href="/app.html">Open the Ledger</a>
-        <a class="btn" href="#how">See how it works</a>
+  <nav>
+    <div class="nav-inner">
+      <a class="mark" href="/">DO <span style="color:var(--gray-3)">or</span> <span class="die">DIE</span></a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="/app.html" class="btn btn-filled">Open App</a>
       </div>
     </div>
-    <pre id="skull" aria-hidden="true"></pre>
-  </div>
-  <div class="hero-stats reveal">
-    <div class="hstat"><b>2</b><span>emails / day</span></div>
-    <div class="hstat"><b>0</b><span>edits to the past</span></div>
-    <div class="hstat"><b>100</b><span>max score</span></div>
-    <div class="hstat"><b>14</b><span>days to perfect</span></div>
-  </div>
-  <div class="scroll-hint">scroll</div>
-</header>
+  </nav>
 
-<div class="marquee" aria-hidden="true">
-  <div class="marquee-track" id="marquee"></div>
-</div>
-
-<section id="features">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="eyebrow">The Rules</div>
-      <h2 class="sec-title">Built like a case file,<br>run like a <em>court.</em></h2>
+  <header class="hero">
+    <div class="hero-flex">
+      <div class="hero-left">
+        <div class="eyebrow">Accountability Ledger</div>
+        <h1><span class="ld-word" data-text="DO">DO</span><span class="or">or</span><span class="ld-word die"
+            data-text="DIE">DIE</span></h1>
+        <p class="sub">A no-excuses task ledger. Assign the work, do the work, and let an unforgiving score keep you
+          honest. Yesterday is locked forever.</p>
+        <div class="hero-cta">
+          <a class="btn btn-red" href="/app.html">Open the Ledger</a>
+          <a class="btn" href="#how">See how it works</a>
+        </div>
+      </div>
+      <pre id="skull" aria-hidden="true"></pre>
     </div>
-    <div class="grid">
-      <div class="card reveal"><div class="num">RULE 01</div><h3>The past is sealed</h3><p>Yesterday's entries are read-only. Mark a task late and the record shows exactly what happened. No rewrites, no mercy.</p></div>
-      <div class="card reveal"><div class="num">RULE 02</div><h3>Daily verdicts</h3><p>Every day gets a completion percentage. Cross 80 percent and your streak lives. Fall short and the ledger turns red.</p></div>
-      <div class="card reveal"><div class="num">RULE 03</div><h3>Emails that follow up</h3><p>Your tasks arrive in your inbox every morning. Every evening, the verdict follows: completed, pending, and nowhere to hide.</p></div>
-      <div class="card reveal"><div class="num">RULE 04</div><h3>One score above all</h3><p>Completion, consistency and streaks roll into a single accountability score out of 100. It only respects sustained effort.</p></div>
+    <div class="hero-stats reveal">
+      <div class="hstat"><b>2</b><span>emails / day</span></div>
+      <div class="hstat"><b>0</b><span>edits to the past</span></div>
+      <div class="hstat"><b>100</b><span>max score</span></div>
+      <div class="hstat"><b>14</b><span>days to perfect</span></div>
     </div>
-  </div>
-</section>
+    <div class="scroll-hint">scroll</div>
+  </header>
 
-<section id="how" style="background:var(--bg); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="eyebrow">Procedure</div>
-      <h2 class="sec-title">Three steps. Zero loopholes.</h2>
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="marquee"></div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">The Rules</div>
+        <h2 class="sec-title">Built like a case file,<br>run like a <em>court.</em></h2>
+      </div>
+      <div class="grid">
+        <div class="card reveal">
+          <div class="num">RULE 01</div>
+          <h3>The past is sealed</h3>
+          <p>Yesterday's entries are read-only. Mark a task late and the record shows exactly what happened. No
+            rewrites, no mercy.</p>
+        </div>
+        <div class="card reveal">
+          <div class="num">RULE 02</div>
+          <h3>Daily verdicts</h3>
+          <p>Every day gets a completion percentage. Cross 80 percent and your streak lives. Fall short and the ledger
+            turns red.</p>
+        </div>
+        <div class="card reveal">
+          <div class="num">RULE 03</div>
+          <h3>Emails that follow up</h3>
+          <p>Your tasks arrive in your inbox every morning. Every evening, the verdict follows: completed, pending, and
+            nowhere to hide.</p>
+        </div>
+        <div class="card reveal">
+          <div class="num">RULE 04</div>
+          <h3>One score above all</h3>
+          <p>Completion, consistency and streaks roll into a single accountability score out of 100. It only respects
+            sustained effort.</p>
+        </div>
+      </div>
     </div>
-    <div class="steps">
-      <div class="step reveal"><div class="big">01</div><h3>Assignment</h3><p>An admin assigns each task with an expected time and importance level. It applies from today onward, history stays untouched.</p></div>
-      <div class="step reveal"><div class="big">02</div><h3>Execution</h3><p>You get the list by email at dawn. Through the day you mark what is done. Only today's checkboxes can be touched.</p></div>
-      <div class="step reveal"><div class="big">03</div><h3>Verdict</h3><p>At night the ledger closes: completed, pending, percentage, and a message you may not enjoy. Then it is permanent.</p></div>
+  </section>
+
+  <section id="how"
+    style="background:var(--bg); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Procedure</div>
+        <h2 class="sec-title">Three steps. Zero loopholes.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="big">01</div>
+          <h3>Assignment</h3>
+          <p>An admin assigns each task with an expected time and importance level. It applies from today onward,
+            history stays untouched.</p>
+        </div>
+        <div class="step reveal">
+          <div class="big">02</div>
+          <h3>Execution</h3>
+          <p>You get the list by email at dawn. Through the day you mark what is done. Only today's checkboxes can be
+            touched.</p>
+        </div>
+        <div class="step reveal">
+          <div class="big">03</div>
+          <h3>Verdict</h3>
+          <p>At night the ledger closes: completed, pending, percentage, and a message you may not enjoy. Then it is
+            permanent.</p>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="quote">
-  <div class="wrap reveal">
-    <blockquote>"You can improve tomorrow.<br>You cannot <strong>rewrite yesterday.</strong>"</blockquote>
-    <div class="who">House Rule Number One</div>
-  </div>
-</section>
+  <section class="quote">
+    <div class="wrap reveal">
+      <blockquote>"You can improve tomorrow.<br>You cannot <strong>rewrite yesterday.</strong>"</blockquote>
+      <div class="who">House Rule Number One</div>
+    </div>
+  </section>
 
-<section class="cta-box">
-  <div class="reveal">
-    <h2>DO <span style="color:var(--gray-3); font-family:var(--serif); font-style:italic; font-size:.45em;">or</span> <span class="die">DIE</span></h2>
-    <p>The ledger is open. Sign in, face today's tasks, and give the evening report something good to say.</p>
-    <a class="btn btn-red" href="/app.html">Open the Ledger</a>
-  </div>
-</section>
+  <section class="cta-box">
+    <div class="reveal">
+      <h2>DO <span style="color:var(--gray-3); font-family:var(--serif); font-style:italic; font-size:.45em;">or</span>
+        <span class="die">DIE</span></h2>
+      <p>The ledger is open. Sign in, face today's tasks, and give the evening report something good to say.</p>
+      <a class="btn btn-red" href="/app.html">Open the Ledger</a>
+    </div>
+  </section>
 
-<footer>Do or Die - Accountability Ledger - no editing the past</footer>
+  <footer>Do or Die - Accountability Ledger - no editing the past</footer>
 
-<script>
-document.documentElement.classList.add('js');
-const SCRAMBLE_CHARS = '!<>-_\\/[]{}=+*^?#________';
-function scrambleWord(el){
-  const target = el.getAttribute('data-text');
-  const queue = target.split('').map((ch, i) => ({
-    ch,
-    start: i * 5 + Math.floor(Math.random() * 5),
-    end: i * 5 + 11 + Math.floor(Math.random() * 10)
-  }));
-  let frame = 0;
-  return new Promise(resolve => {
-    (function tick(){
-      let out = '', done = 0;
-      for(const q of queue){
-        if(frame >= q.end){ out += q.ch; done++; }
-        else if(frame >= q.start){ out += '<span style="opacity:.4">' + SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)] + '</span>'; }
-        else { out += '&nbsp;'; }
-      }
-      el.innerHTML = out;
-      if(done === queue.length) resolve();
-      else { frame++; setTimeout(tick, 48); }
-    })();
-  });
-}
-// boot loader: loop the decrypt effect until the page is ready
-let loaderRunning = true;
-function hideLoader(){
-  loaderRunning = false;
-  document.getElementById('loader').classList.add('hidden');
-}
-(async function loaderLoop(){
-  while(loaderRunning){
-    await Promise.all(Array.from(document.querySelectorAll('#loader .ld-word')).map(scrambleWord));
-    await new Promise(r => setTimeout(r, 400));
-  }
-})();
-
-// hero title decrypt
-Promise.all(Array.from(document.querySelectorAll('.hero .ld-word')).map(scrambleWord));
-
-// skull art loaded from skull.txt (exact source, no transcription drift)
-function renderSkull(text){
-  const pre = document.getElementById('skull');
-  const lines = text.replace(/\r/g, '').split('\n');
-  let out = '';
-  for(let li = 0; li < lines.length; li++){
-    let col = 0;
-    for(const ch of lines[li]){
-      if(ch === '¶'){
-        // flame zone follows the arc: hair sits lower at the left/right edges,
-        // so the cutoff deepens toward the sides instead of being a flat row cut
-        const d = Math.abs(col - 31);            // distance from skull center
-        const limit = 12 + Math.min(3, Math.round(d / 8));
-        if(li < limit){
-          // independent random phase per character: true char-wise flicker
-          out += '<span class="k-flame" style="animation-delay:-' + Math.floor(Math.random() * 2400) + 'ms">¶</span>';
-        } else {
-          out += '<span class="k-ink">¶</span>';
-        }
-      } else { out += ch; }
-      col++;
+  <script>
+    document.documentElement.classList.add('js');
+    const SCRAMBLE_CHARS = '!<>-_\\/[]{}=+*^?#________';
+    function scrambleWord(el) {
+      const target = el.getAttribute('data-text');
+      const queue = target.split('').map((ch, i) => ({
+        ch,
+        start: i * 5 + Math.floor(Math.random() * 5),
+        end: i * 5 + 11 + Math.floor(Math.random() * 10)
+      }));
+      let frame = 0;
+      return new Promise(resolve => {
+        (function tick() {
+          let out = '', done = 0;
+          for (const q of queue) {
+            if (frame >= q.end) { out += q.ch; done++; }
+            else if (frame >= q.start) { out += '<span style="opacity:.4">' + SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)] + '</span>'; }
+            else { out += '&nbsp;'; }
+          }
+          el.innerHTML = out;
+          if (done === queue.length) resolve();
+          else { frame++; setTimeout(tick, 48); }
+        })();
+      });
     }
-    out += '\n';
-  }
-  pre.innerHTML = out;
-}
-const skullReady = fetch('/skull.txt').then(r => r.text()).then(renderSkull).catch(() => {});
-// hide loader once fonts + art are ready (minimum 1.5s so the effect is visible)
-Promise.all([
-  document.fonts ? document.fonts.ready : Promise.resolve(),
-  skullReady,
-  new Promise(r => setTimeout(r, 1500))
-]).then(hideLoader);
+    // boot loader: loop the decrypt effect until the page is ready
+    let loaderRunning = true;
+    function hideLoader() {
+      loaderRunning = false;
+      document.getElementById('loader').classList.add('hidden');
+    }
+    (async function loaderLoop() {
+      while (loaderRunning) {
+        await Promise.all(Array.from(document.querySelectorAll('#loader .ld-word')).map(scrambleWord));
+        await new Promise(r => setTimeout(r, 400));
+      }
+    })();
 
-// marquee
-const items = ['NO EDITING THE PAST','DAILY VERDICTS','MORNING BRIEFING','EVENING REPORT','STREAKS','ACCOUNTABILITY SCORE'];
-const half = items.map(t => t + '<span class="dot">//</span>').join('');
-document.getElementById('marquee').innerHTML = half + half;
+    // hero title decrypt
+    Promise.all(Array.from(document.querySelectorAll('.hero .ld-word')).map(scrambleWord));
 
-// scroll reveal
-const io = new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-}, { threshold: .15 });
-document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-// safety net: never leave content hidden
-setTimeout(() => document.querySelectorAll('.reveal:not(.in)').forEach(el => el.classList.add('in')), 1500);
-</script>
+    // skull art loaded from skull.txt (exact source, no transcription drift)
+    function renderSkull(text) {
+      const pre = document.getElementById('skull');
+      const lines = text.replace(/\r/g, '').split('\n');
+      let out = '';
+      for (let li = 0; li < lines.length; li++) {
+        let col = 0;
+        for (const ch of lines[li]) {
+          if (ch === '¶') {
+            // flame zone follows the arc: hair sits lower at the left/right edges,
+            // so the cutoff deepens toward the sides instead of being a flat row cut
+            const d = Math.abs(col - 31);            // distance from skull center
+            const limit = 12 + Math.min(3, Math.round(d / 8));
+            if (li < limit) {
+              // independent random phase per character: true char-wise flicker
+              out += '<span class="k-flame" style="animation-delay:-' + Math.floor(Math.random() * 2400) + 'ms">¶</span>';
+            } else {
+              out += '<span class="k-ink">¶</span>';
+            }
+          } else { out += ch; }
+          col++;
+        }
+        out += '\n';
+      }
+      pre.innerHTML = out;
+    }
+    const skullReady = fetch('/skull.txt').then(r => r.text()).then(renderSkull).catch(() => { });
+    // hide loader once fonts + art are ready (minimum 1.5s so the effect is visible)
+    Promise.all([
+      document.fonts ? document.fonts.ready : Promise.resolve(),
+      skullReady,
+      new Promise(r => setTimeout(r, 1500))
+    ]).then(hideLoader);
+
+    // marquee
+    const items = ['NO EDITING THE PAST', 'DAILY VERDICTS', 'MORNING BRIEFING', 'EVENING REPORT', 'STREAKS', 'ACCOUNTABILITY SCORE'];
+    const half = items.map(t => t + '<span class="dot">//</span>').join('');
+    document.getElementById('marquee').innerHTML = half + half;
+
+    // scroll reveal
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: .15 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    // safety net: never leave content hidden
+    setTimeout(() => document.querySelectorAll('.reveal:not(.in)').forEach(el => el.classList.add('in')), 1500);
+  </script>
 </body>
+
 </html>

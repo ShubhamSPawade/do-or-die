@@ -1,5 +1,7 @@
 const { spawn } = require('child_process');
-const child = spawn('node', ['src/server.js'], { cwd: 'C:\\Users\\Shubham\\Desktop\\doordie', stdio: 'ignore', detached: true });
+const path = require('path');
+const projectDir = path.resolve(__dirname, '..');
+const child = spawn('node', ['src/server.js'], { cwd: projectDir, stdio: 'ignore', detached: true });
 
 async function waitForServer(timeoutMs){
   const t0 = Date.now();
@@ -20,7 +22,7 @@ async function waitForServer(timeoutMs){
   const { execSync } = require('child_process');
   let code = 1;
   try {
-    const out = execSync('node scripts/test-selfserve.mjs', { cwd: 'C:\\Users\\Shubham\\Desktop\\doordie', encoding: 'utf8' });
+    const out = execSync('node scripts/test-selfserve.mjs', { cwd: projectDir, encoding: 'utf8' });
     console.log(out);
     code = 0;
   } catch(e){
