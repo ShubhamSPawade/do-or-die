@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import { supabase } from '../db.js';
+import { sendPasswordResetEmail } from '../services/mail.service.js';
 
 const router = Router();
 const loginLimiter = rateLimit({
@@ -57,8 +58,6 @@ router.post('/register', loginLimiter, async (req, res, next) => {
     res.status(201).json({ token, ...payload });
   } catch(err){ next(err); }
 });
-
-import { sendPasswordResetEmail } from '../services/mail.service.js';
 
 router.post('/forgot-password', loginLimiter, async (req, res, next) => {
   try {
