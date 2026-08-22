@@ -30,18 +30,25 @@ let loaderRunning = false;
 let loaderShownAt = 0;
 
 async function runLoader(){
+  if(loaderRunning) return;
   loaderRunning = true;
   loaderShownAt = Date.now();
+  const loaderEl = document.getElementById('loader');
+  if(loaderEl) loaderEl.classList.remove('hidden');
+
   while(loaderRunning){
     await Promise.all(Array.from(document.querySelectorAll('#loader .ld-word')).map(scrambleWord));
-    await new Promise(r => setTimeout(r, 500));
+    if(!loaderRunning) break;
+    await new Promise(r => setTimeout(r, 400));
   }
 }
 
-async function hideLoader(){
-  // keep the effect visible for at least ~1.5s even if loading finishes instantly
-  const wait = Math.max(0, 1500 - (Date.now() - loaderShownAt));
-  if(wait) await new Promise(r => setTimeout(r, wait));
+async function hideLoader(immediate = false){
+  if(!immediate){
+    const wait = Math.max(0, 1200 - (Date.now() - loaderShownAt));
+    if(wait) await new Promise(r => setTimeout(r, wait));
+  }
   loaderRunning = false;
-  document.getElementById('loader').classList.add('hidden');
+  const loaderEl = document.getElementById('loader');
+  if(loaderEl) loaderEl.classList.add('hidden');
 }

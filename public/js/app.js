@@ -144,10 +144,10 @@ function initAuthUI(){
   btn.addEventListener('click', async () => {
     if(btn.disabled) return;
     btn.disabled = true;
+    btn.textContent = authMode === 'forgot' ? 'Sending...' : 'Please wait...';
     errEl.classList.add('hidden');
     if(okEl) okEl.classList.add('hidden');
-    document.getElementById('loader').classList.remove('hidden');
-    runLoader();
+
     try{
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
@@ -196,7 +196,10 @@ function initAuthUI(){
       errEl.classList.remove('hidden');
     }finally{
       btn.disabled = false;
-      hideLoader();
+      if(authMode === 'signup') btn.textContent = 'Create Account';
+      else if(authMode === 'forgot') btn.textContent = 'Send Reset Link';
+      else if(authMode === 'reset') btn.textContent = 'Update Password';
+      else btn.textContent = 'Sign In';
     }
   });
 
