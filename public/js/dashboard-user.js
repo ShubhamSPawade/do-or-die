@@ -56,27 +56,27 @@ function renderUserDashboard(){
   else if(pct < 50){ verdictLine = `<div class="verdict-line verdict-bad">YOU ARE FALLING BEHIND</div>`; }
 
   const html = `
-    <div class="case-box case-box-pad">
-      <div class="section-title">Add a Task</div>
-      <div class="section-sub">Your own work, from today onward.</div>
-      <div class="field">
-        <label for="my-task-name">Task Name</label>
-        <input type="text" id="my-task-name" placeholder="e.g. Revise DSA">
-      </div>
-      <div class="field">
-        <label for="my-task-time">Expected Time</label>
-        <input type="text" id="my-task-time" placeholder="e.g. 2 hours">
-      </div>
-      <div class="field">
-        <label>Importance</label>
-        ${segHtml('my-importance-seg', 'MEDIUM')}
-      </div>
-      <button class="btn btn-filled btn-block" id="my-add-task-btn">Add Task</button>
-      <div class="error-text hidden" id="my-task-error">Enter a task name and expected time.</div>
-    </div>
-
     <div class="dash-wrap">
       <div class="dash-main">
+        <div class="case-box case-box-pad">
+          <div class="section-title">Add a Task</div>
+          <div class="section-sub">Your own work, from today onward.</div>
+          <div class="field">
+            <label for="my-task-name">Task Name</label>
+            <input type="text" id="my-task-name" placeholder="e.g. Revise DSA">
+          </div>
+          <div class="field">
+            <label for="my-task-time">Expected Time</label>
+            <input type="text" id="my-task-time" placeholder="e.g. 2 hours">
+          </div>
+          <div class="field">
+            <label>Importance</label>
+            ${segHtml('my-importance-seg', 'MEDIUM')}
+          </div>
+          <button class="btn btn-filled btn-block" id="my-add-task-btn">Add Task</button>
+          <div class="error-text hidden" id="my-task-error">Enter a task name and expected time.</div>
+        </div>
+
         <div class="case-box dash-today">
           <div class="case-box-pad">
             <div class="section-title">Today - ${prettyDateLong(today)}</div>

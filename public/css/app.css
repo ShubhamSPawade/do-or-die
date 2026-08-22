@@ -39,7 +39,7 @@ input, select{ font-family:inherit; }
    SHARED PRIMITIVES
 ========================================================= */
 .wrap{
-  max-width:760px;
+  max-width:860px;
   margin:0 auto;
   padding:20px 18px 60px;
 }
@@ -201,7 +201,7 @@ input, select{ font-family:inherit; }
   background:var(--bg);
 }
 .header-inner{
-  max-width:760px;
+  max-width:860px;
   margin:0 auto;
   padding:14px 18px;
   display:flex;
@@ -446,7 +446,8 @@ input, select{ font-family:inherit; }
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:14px;
-  margin-top:14px;
+  margin-top:0;
+  align-items:start;
 }
 .dash-wrap .case-box{ margin-top:0; }
 .dash-main{ display:flex; flex-direction:column; gap:14px; }
