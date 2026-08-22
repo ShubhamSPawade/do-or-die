@@ -11,12 +11,13 @@ create table if not exists users (
 );
 
 create table if not exists tasks (
-  id           text primary key,
   user_email   text not null references users(email) on delete cascade,
+  id           text not null,
   name         text not null,
   time_label   text not null,
   importance   text not null check (importance in ('LOW','MEDIUM','HIGH')),
-  created_date text not null
+  created_date text not null,
+  primary key (user_email, id)
 );
 create index if not exists tasks_user_idx on tasks(user_email);
 
