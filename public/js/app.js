@@ -10,7 +10,8 @@ let me = null;           // signed-in user
 let showingOwnView = false; // admin toggled to their personal dashboard
 let myEmailSettings = { morning_hour: 9, evening_hour: 20 };
 let myEditingTaskId = null;
-let authMode = 'signin'; // 'signin' | 'signup' | 'forgot'
+let authMode = 'signin'; // 'signin' | 'signup' | 'forgot' | 'reset'
+let activeResetToken = null;
 
 // admin-only globals
 let adminUsers = [];       // all accounts (admin only), from GET /api/users
@@ -19,10 +20,13 @@ let editingTaskId = null;  // task currently in inline edit mode
 let emailSettings = { morning_hour: 9, evening_hour: 20 }; // email schedule hours
 
 /* --- Auth Mode Switcher --- */
-function setAuthMode(mode){
+function setAuthMode(mode, token = null){
   authMode = mode;
+  activeResetToken = token;
   const btn = document.getElementById('login-btn');
   const nameField = document.getElementById('name-field');
+  const emailField = document.getElementById('email-field') || document.getElementById('login-email').parentElement;
+  const pwdField = document.getElementById('password-field');
   const pwdLabel = document.getElementById('password-label');
   const subEl = document.getElementById('login-sub');
   const modeToggle = document.getElementById('mode-toggle');
@@ -35,6 +39,8 @@ function setAuthMode(mode){
 
   if(mode === 'signup'){
     nameField.classList.remove('hidden');
+    emailField.classList.remove('hidden');
+    pwdField.classList.remove('hidden');
     pwdLabel.textContent = 'Password';
     btn.textContent = 'Create Account';
     subEl.textContent = 'Create Your Account';
@@ -42,14 +48,27 @@ function setAuthMode(mode){
     forgotToggle.classList.add('hidden');
   } else if(mode === 'forgot'){
     nameField.classList.add('hidden');
-    pwdLabel.textContent = 'New Password';
-    btn.textContent = 'Reset Password';
+    emailField.classList.remove('hidden');
+    pwdField.classList.add('hidden');
+    btn.textContent = 'Send Reset Link';
     subEl.textContent = 'Reset Your Password';
     modeToggle.textContent = 'Back to Sign In';
     forgotToggle.classList.add('hidden');
+  } else if(mode === 'reset'){
+    nameField.classList.add('hidden');
+    emailField.classList.add('hidden');
+    pwdField.classList.remove('hidden');
+    pwdLabel.textContent = 'New Password';
+    btn.textContent = 'Update Password';
+    subEl.textContent = 'Choose New Password';
+    modeToggle.textContent = 'Cancel';
+    forgotToggle.classList.add('hidden');
   } else {
     authMode = 'signin';
+    activeResetToken = null;
     nameField.classList.add('hidden');
+    emailField.classList.remove('hidden');
+    pwdField.classList.remove('hidden');
     pwdLabel.textContent = 'Password';
     btn.textContent = 'Sign In';
     subEl.textContent = 'Accountability Ledger';
@@ -95,13 +114,21 @@ function showLogin(){
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('login-email').value = '';
   document.getElementById('login-password').value = '';
-  setAuthMode('signin');
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  if(token){
+    setAuthMode('reset', token);
+  } else {
+    setAuthMode('signin');
+  }
 }
 
 /* --- Wire Up Auth UI --- */
 function initAuthUI(){
   const btn = document.getElementById('login-btn');
   const errEl = document.getElementById('login-error');
+  const okEl = document.getElementById('login-success');
 
   document.getElementById('mode-toggle').addEventListener('click', e => {
     e.preventDefault();
@@ -118,6 +145,7 @@ function initAuthUI(){
     if(btn.disabled) return;
     btn.disabled = true;
     errEl.classList.add('hidden');
+    if(okEl) okEl.classList.add('hidden');
     document.getElementById('loader').classList.remove('hidden');
     runLoader();
     try{
@@ -136,8 +164,19 @@ function initAuthUI(){
           errEl.classList.remove('hidden');
         }
       } else if(authMode === 'forgot'){
-        const r = await postJson('/api/reset-password', { email, password });
+        const r = await postJson('/api/forgot-password', { email });
         if(r.ok){
+          okEl.textContent = r.data.message || 'Password reset link sent to your email.';
+          okEl.classList.remove('hidden');
+        } else {
+          errEl.textContent = r.data.error || 'Could not send reset link.';
+          errEl.classList.remove('hidden');
+        }
+      } else if(authMode === 'reset'){
+        const r = await postJson('/api/reset-password', { token: activeResetToken, password });
+        if(r.ok){
+          // Clean token from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
           localStorage.setItem(SESSION_KEY, r.data.token);
           user = r.data;
         } else {

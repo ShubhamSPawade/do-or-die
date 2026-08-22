@@ -87,7 +87,7 @@ function renderUserDashboard(){
 
         <div class="case-box case-box-pad dash-sched">
           <div class="section-title">Email Schedule</div>
-          <div class="section-sub">Your personal daily emails (Apps Script).</div>
+          <div class="section-sub">Your personal daily email notifications.</div>
           <div style="display:flex; gap:12px;">
             <div class="field" style="flex:1; margin-bottom:0;">
               <label for="my-morning-hour">Morning Hour (0-23)</label>

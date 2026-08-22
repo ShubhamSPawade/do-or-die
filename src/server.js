@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/users.routes.js';
 import stateRoutes from './routes/state.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
+import { startScheduler } from './services/scheduler.service.js';
 
 if(!process.env.JWT_SECRET){
   console.error('Missing JWT_SECRET in .env');
@@ -36,4 +37,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 });
 
 const PORT = process.env.PORT || 4321;
-app.listen(PORT, () => console.log('DO OR DIE running at http://localhost:' + PORT));
+app.listen(PORT, () => {
+  console.log('DO OR DIE running at http://localhost:' + PORT);
+  startScheduler();
+});

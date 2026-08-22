@@ -121,7 +121,7 @@ function renderAdminDashboard(){
 
     <div class="case-box case-box-pad">
       <div class="section-title">Email Schedule</div>
-      <div class="section-sub">Daily task email &amp; evening summary - sent via Apps Script.</div>
+      <div class="section-sub">Daily task email &amp; evening summary notifications.</div>
       <div style="display:flex; gap:12px;">
         <div class="field" style="flex:1; margin-bottom:0;">
           <label for="morning-hour">Morning Hour (0–23)</label>
