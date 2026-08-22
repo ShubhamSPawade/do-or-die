@@ -54,9 +54,40 @@ function wrapHtml(inner){
 }
 
 export async function sendMail({ to, subject, html, text }){
+  // 1. Check for Resend API key (HTTPS API - 100% firewall & port-block proof on cloud hosts like Render)
+  const resendKey = process.env.RESEND_API_KEY || (process.env.SMTP_PASS && process.env.SMTP_PASS.startsWith('re_') ? process.env.SMTP_PASS : null);
+  if(resendKey){
+    try {
+      const fromAddr = FROM_EMAIL.includes('<') ? FROM_EMAIL : `DO OR DIE <${FROM_EMAIL}>`;
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: fromAddr,
+          to: [to],
+          subject,
+          html,
+          text
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if(res.ok){
+        console.log('[MAIL SERVICE] Email sent successfully via Resend API to', to);
+        return { ok: true, messageId: data.id };
+      }
+      console.warn('[MAIL SERVICE] Resend API notice:', data.message || JSON.stringify(data));
+    } catch(err){
+      console.warn('[MAIL SERVICE] Resend API fetch notice:', err.message);
+    }
+  }
+
+  // 2. Standard SMTP via Nodemailer
   const client = getTransporter();
   if(!client){
-    console.log('\n[MAIL SERVICE] (SMTP not configured in .env - email logged to console)');
+    console.log('\n[MAIL SERVICE] (SMTP/Resend not configured in .env - email logged to console)');
     console.log('To:', to);
     console.log('Subject:', subject);
     console.log('Body:', text || html);
@@ -74,10 +105,11 @@ export async function sendMail({ to, subject, html, text }){
     });
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('SMTP timeout after 5000ms')), 5000)
+      setTimeout(() => reject(new Error('SMTP timeout after 4000ms')), 4000)
     );
 
     const info = await Promise.race([sendPromise, timeoutPromise]);
+    console.log('[MAIL SERVICE] Email sent successfully via SMTP to', to);
     return { ok: true, messageId: info.messageId };
   } catch(err){
     console.warn('[MAIL SERVICE] Notice: SMTP delivery warning (' + err.message + '). Fallback logging:');

@@ -9,7 +9,8 @@ const router = Router();
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: { error: 'Too many login attempts. Try again later.' }
+  validate: { xForwardedForHeader: false },
+  message: { error: 'Too many attempts. Try again later.' }
 });
 
 router.post('/login', loginLimiter, async (req, res, next) => {
