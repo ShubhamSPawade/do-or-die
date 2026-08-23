@@ -247,12 +247,13 @@ function initAuthUI(){
     showLogin();
   });
 
-  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+  document.querySelectorAll('.theme-toggle, .theme-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       const next = isDark ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
+      document.querySelectorAll('.theme-toggle').forEach(t => t.setAttribute('aria-checked', next === 'dark' ? 'true' : 'false'));
       const mc = document.querySelector('meta[name="theme-color"]');
       if(mc) mc.setAttribute('content', next === 'dark' ? '#0c0c0c' : '#111111');
     });
