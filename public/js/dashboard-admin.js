@@ -56,15 +56,43 @@ function renderAdminDashboard(){
     `<option value="${escapeHtml(u.email)}"${u.email === viewingEmail ? ' selected' : ''}>${escapeHtml(u.name)} (${u.role})</option>`
   ).join('');
 
+  const userRows = adminUsers.length === 0
+    ? `<p style="color:var(--gray-3); font-style:italic;">No users found.</p>`
+    : adminUsers.map(u => {
+        const isSelf = u.email === me.email;
+        const isViewing = u.email === viewingEmail;
+        return `
+        <div class="task-def-row" style="align-items:center; justify-content:space-between; gap:12px;">
+          <div style="min-width:0; flex:1;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <strong>${escapeHtml(u.name)}</strong>
+              <span class="badge ${u.role === 'ADMIN' ? 'badge-high' : 'badge-low'}" style="font-size:9px; padding:2px 6px;">${u.role}</span>
+              ${isSelf ? '<span style="font-size:10px; color:var(--gray-4); font-weight:600;">(You)</span>' : ''}
+              ${isViewing ? '<span style="font-size:10px; color:var(--stamp); font-weight:700; letter-spacing:.05em;">● ACTIVE</span>' : ''}
+            </div>
+            <div style="color:var(--gray-4); font-size:11px; font-family:var(--font-mono); margin-top:2px;">${escapeHtml(u.email)}</div>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            ${!isViewing ? `<button class="btn btn-sm" data-action="switch-subject" data-email="${escapeHtml(u.email)}">View</button>` : ''}
+            ${!isSelf ? `<button class="btn btn-ghost btn-sm" data-action="delete-user" data-email="${escapeHtml(u.email)}" data-name="${escapeHtml(u.name)}" style="color:var(--stamp); border-color:var(--gray-2);">Delete</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+
   const html = `
     <div class="case-box case-box-pad">
       <div class="admin-tag">Case File</div>
       <div class="section-title" style="font-size:20px;">${escapeHtml(subject ? subject.name : 'Subject')}</div>
       <div class="section-sub">Subject under observation</div>
 
-      <div class="field">
-        <label for="subject-select">Subject</label>
-        <select id="subject-select">${subjectOptions}</select>
+      <div class="field" style="display:flex; gap:8px; align-items:flex-end;">
+        <div style="flex:1;">
+          <label for="subject-select">Subject</label>
+          <select id="subject-select" style="width:100%;">${subjectOptions}</select>
+        </div>
+        ${viewingEmail !== me.email ? `
+          <button class="btn btn-ghost btn-sm" id="delete-current-subject-btn" style="height:38px; color:var(--stamp); border-color:var(--gray-2);" title="Delete current subject">Delete</button>
+        ` : ''}
       </div>
 
       <div class="stat-grid">
@@ -120,20 +148,11 @@ function renderAdminDashboard(){
     </div>
 
     <div class="case-box case-box-pad">
-      <div class="section-title">Email Schedule</div>
-      <div class="section-sub">Daily task email &amp; evening summary notifications.</div>
-      <div style="display:flex; gap:12px;">
-        <div class="field" style="flex:1; margin-bottom:0;">
-          <label for="morning-hour">Morning Hour (0–23)</label>
-          <input type="number" id="morning-hour" min="0" max="23" value="${emailSettings.morning_hour}">
-        </div>
-        <div class="field" style="flex:1; margin-bottom:0;">
-          <label for="evening-hour">Evening Hour (0–23)</label>
-          <input type="number" id="evening-hour" min="0" max="23" value="${emailSettings.evening_hour}">
-        </div>
+      <div class="section-title">Manage Accounts</div>
+      <div class="section-sub">Inspect or delete registered user accounts.</div>
+      <div id="admin-user-list">
+        ${userRows}
       </div>
-      <button class="btn btn-filled btn-block" id="save-schedule-btn" style="margin-top:12px;">Save Schedule</button>
-      <div class="lock-note hidden" id="schedule-success"></div>
     </div>
 
     <div class="case-box case-box-pad">
@@ -162,6 +181,23 @@ function renderAdminDashboard(){
       <div class="error-text hidden" id="user-error"></div>
       <div class="lock-note hidden" id="user-success"></div>
     </div>
+
+    <div class="case-box case-box-pad">
+      <div class="section-title">Email Schedule</div>
+      <div class="section-sub">Daily task email &amp; evening summary notifications.</div>
+      <div style="display:flex; gap:12px;">
+        <div class="field" style="flex:1; margin-bottom:0;">
+          <label for="morning-hour">Morning Hour (0–23)</label>
+          <input type="number" id="morning-hour" min="0" max="23" value="${emailSettings.morning_hour}">
+        </div>
+        <div class="field" style="flex:1; margin-bottom:0;">
+          <label for="evening-hour">Evening Hour (0–23)</label>
+          <input type="number" id="evening-hour" min="0" max="23" value="${emailSettings.evening_hour}">
+        </div>
+      </div>
+      <button class="btn btn-filled btn-block" id="save-schedule-btn" style="margin-top:12px;">Save Schedule</button>
+      <div class="lock-note hidden" id="schedule-success"></div>
+    </div>
   `;
 
   const view = document.getElementById('admin-view');
@@ -178,6 +214,79 @@ function renderAdminDashboard(){
     }catch(err){
       console.warn(err);
     }
+  });
+
+  // delete current subject button in case file
+  const delSubjectBtn = view.querySelector('#delete-current-subject-btn');
+  if(delSubjectBtn){
+    delSubjectBtn.addEventListener('click', async () => {
+      const targetUser = adminUsers.find(u => u.email === viewingEmail);
+      const name = targetUser ? targetUser.name : viewingEmail;
+      if(!confirm(`Permanently delete user "${name}" (${viewingEmail})?\n\nAll tasks, progress, and streak history for this account will be erased.`)){
+        return;
+      }
+      delSubjectBtn.disabled = true;
+      try{
+        const r = await deleteJson('/api/users/' + encodeURIComponent(viewingEmail));
+        if(r.ok){
+          adminUsers = adminUsers.filter(u => u.email !== viewingEmail);
+          viewingEmail = adminUsers[0]?.email || me.email;
+          state = await fetchState(viewingEmail);
+          stateOwner = viewingEmail;
+          renderAdminDashboard();
+        } else {
+          alert(r.data.error || 'Failed to delete user.');
+          delSubjectBtn.disabled = false;
+        }
+      }catch(err){
+        alert('Network error while deleting user.');
+        delSubjectBtn.disabled = false;
+      }
+    });
+  }
+
+  // user list actions (switch or delete)
+  view.querySelectorAll('[data-action="switch-subject"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.getAttribute('data-email');
+      if(!email || email === viewingEmail) return;
+      viewingEmail = email;
+      editingTaskId = null;
+      try{
+        state = await fetchState(viewingEmail);
+        stateOwner = viewingEmail;
+        renderAdminDashboard();
+      }catch(err){ console.warn(err); }
+    });
+  });
+
+  view.querySelectorAll('[data-action="delete-user"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.getAttribute('data-email');
+      const name = btn.getAttribute('data-name');
+      if(!confirm(`Permanently delete user "${name}" (${email})?\n\nAll tasks, progress, and streak history for this account will be erased.`)){
+        return;
+      }
+      btn.disabled = true;
+      try{
+        const r = await deleteJson('/api/users/' + encodeURIComponent(email));
+        if(r.ok){
+          adminUsers = adminUsers.filter(u => u.email !== email);
+          if(viewingEmail === email){
+            viewingEmail = adminUsers[0]?.email || me.email;
+            state = await fetchState(viewingEmail);
+            stateOwner = viewingEmail;
+          }
+          renderAdminDashboard();
+        } else {
+          alert(r.data.error || 'Failed to delete user.');
+          btn.disabled = false;
+        }
+      }catch(err){
+        alert('Network error while deleting user.');
+        btn.disabled = false;
+      }
+    });
   });
 
   // add task

@@ -1,4 +1,4 @@
-const base = 'http://localhost:4321';
+const base = process.env.TEST_BASE || 'http://localhost:4321';
 const j = async (path, opts) => { const r = await fetch(base + path, opts); let d = {}; try { d = await r.json(); } catch {} return { s: r.status, d }; };
 const post = (path, body, token) => j(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
 let pass = 0, fail = 0;

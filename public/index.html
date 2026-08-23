@@ -60,6 +60,12 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Spectral+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
     rel="stylesheet">
+  <script>
+    (function () {
+      var t = localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <style>
     :root {
       --bg: #ffffff;
@@ -71,9 +77,23 @@
       --gray-3: #9c9c96;
       --gray-4: #55554f;
       --stamp: #8f2318;
+      --nav-bg: rgba(244, 244, 242, .85);
       --serif: 'Spectral', Georgia, serif;
       --sc: 'Spectral SC', Georgia, serif;
       --mono: 'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #141414;
+      --paper: #0c0c0c;
+      --ink: #ededeb;
+      --line: #2b2b2b;
+      --gray-1: #1c1c1a;
+      --gray-2: #2e2e2c;
+      --gray-3: #787872;
+      --gray-4: #adada6;
+      --stamp: #e24a3a;
+      --nav-bg: rgba(12, 12, 12, .85);
     }
 
     * {
@@ -83,6 +103,28 @@
 
     .hidden {
       display: none !important;
+    }
+
+    /* theme toggle */
+    .theme-icon-sun { display: none; }
+    .theme-icon-moon { display: block; }
+    [data-theme="dark"] .theme-icon-sun { display: block; }
+    [data-theme="dark"] .theme-icon-moon { display: none; }
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 10px;
+      cursor: pointer;
+      line-height: 1;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--ink);
+      transition: all .2s;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--ink);
+      color: var(--bg);
     }
 
     html {
@@ -97,6 +139,7 @@
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      transition: background-color .2s ease, color .2s ease;
     }
 
     ::selection {
@@ -122,7 +165,7 @@
       left: 0;
       right: 0;
       z-index: 50;
-      background: rgba(244, 244, 242, .85);
+      background: var(--nav-bg);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--line);
     }
@@ -689,6 +732,10 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#how">How it works</a>
+        <button class="theme-toggle-btn" id="landing-theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+          <svg class="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
         <a href="/app.html" class="btn btn-filled">Open App</a>
       </div>
     </div>
@@ -892,6 +939,17 @@
     document.querySelectorAll('.reveal').forEach(el => io.observe(el));
     // safety net: never leave content hidden
     setTimeout(() => document.querySelectorAll('.reveal:not(.in)').forEach(el => el.classList.add('in')), 1500);
+
+    // theme toggle
+    const themeBtn = document.getElementById('landing-theme-toggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const next = isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+      });
+    }
   </script>
 </body>
 

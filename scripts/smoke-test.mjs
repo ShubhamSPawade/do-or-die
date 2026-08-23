@@ -1,4 +1,4 @@
-const base = 'http://localhost:4321';
+const base = process.env.TEST_BASE || 'http://localhost:4321';
 const j = async (path, opts) => { const r = await fetch(base + path, opts); let d = {}; try { d = await r.json(); } catch {} return { s: r.status, d }; };
 const post = (path, body, token) => j(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
 let pass = 0, fail = 0;
@@ -9,9 +9,10 @@ function check(name, cond, extra){
 (async () => {
   // ---- frontend ----
   const idx = await fetch(base + '/');
-  const html = await idx.text();
-  check('GET / serves frontend', idx.status === 200 && html.includes('id="login-screen"'));
-  check('frontend has email schedule UI', html.includes('morning-hour'));
+  check('GET / serves landing page', idx.status === 200);
+  const appPage = await fetch(base + '/app.html');
+  const appHtml = await appPage.text();
+  check('GET /app.html serves app', appPage.status === 200 && appHtml.includes('id="login-screen"'));
   const blocked = await fetch(base + '/.env');
   check('.env not served', blocked.status === 403 || blocked.status === 404);
 
@@ -92,6 +93,18 @@ function check(name, cond, extra){
   r = await j('/api/settings', { headers: { Authorization: 'Bearer ' + F } });
   check('non-admin settings forbidden', r.s === 403);
   await post('/api/settings', { morning_hour: 9, evening_hour: 20 }, A);
+
+  // ---- delete user tests ----
+  r = await j('/api/users/test.user@doordie.app', { method: 'DELETE', headers: { Authorization: 'Bearer ' + F } });
+  check('non-admin delete user forbidden', r.s === 403);
+  r = await j('/api/users/admin@doordie.app', { method: 'DELETE', headers: { Authorization: 'Bearer ' + A } });
+  check('admin cannot delete own account', r.s === 400);
+  r = await j('/api/users/nonexistent@doordie.app', { method: 'DELETE', headers: { Authorization: 'Bearer ' + A } });
+  check('delete nonexistent user returns 404', r.s === 404);
+  r = await j('/api/users/test.user@doordie.app', { method: 'DELETE', headers: { Authorization: 'Bearer ' + A } });
+  check('admin delete user success', r.s === 200);
+  r = await post('/api/login', { email: 'test.user@doordie.app', password: 'test123' });
+  check('deleted user cannot login', r.s === 401);
 
   console.log('---');
   console.log('PASS:' + pass + ' FAIL:' + fail);

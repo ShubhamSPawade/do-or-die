@@ -40,12 +40,12 @@ function renderContributionChart(year, month){
     <div class="chart-grid">${cells}</div>
     <div class="chart-legend">
       <span>LOW</span>
-      <span class="legend-sq" style="background:var(--gray-1)"></span>
-      <span class="legend-sq" style="background:#d6d6d2"></span>
-      <span class="legend-sq" style="background:#b3b3ad"></span>
-      <span class="legend-sq" style="background:#87877f"></span>
-      <span class="legend-sq" style="background:#54544d"></span>
-      <span class="legend-sq" style="background:var(--ink)"></span>
+      <span class="legend-sq" style="background:var(--chart-0)"></span>
+      <span class="legend-sq" style="background:var(--chart-1)"></span>
+      <span class="legend-sq" style="background:var(--chart-2)"></span>
+      <span class="legend-sq" style="background:var(--chart-3)"></span>
+      <span class="legend-sq" style="background:var(--chart-4)"></span>
+      <span class="legend-sq" style="background:var(--chart-5)"></span>
       <span>HIGH</span>
     </div>
   `;

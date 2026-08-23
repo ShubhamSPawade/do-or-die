@@ -246,6 +246,17 @@ function initAuthUI(){
     state = null;
     showLogin();
   });
+
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      const mc = document.querySelector('meta[name="theme-color"]');
+      if(mc) mc.setAttribute('content', next === 'dark' ? '#0c0c0c' : '#111111');
+    });
+  });
 }
 
 /* --- Boot --- */

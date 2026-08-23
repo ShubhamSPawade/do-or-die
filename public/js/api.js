@@ -23,6 +23,12 @@ async function getJson(path){
   return { ok: res.ok, status: res.status, data };
 }
 
+async function deleteJson(path){
+  const res = await fetch(path, { method: 'DELETE', headers: authHeaders() });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
 async function attemptLogin(email, password){
   const r = await postJson('/api/login', { email, password });
   if(!r.ok) return null;

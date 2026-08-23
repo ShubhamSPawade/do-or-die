@@ -12,10 +12,37 @@
   --gray-4:    #55554f;
   --stamp:     #8f2318;
   --stamp-bg:  #f7e9e7;
+  --chart-0:   #ececea;
+  --chart-1:   #d6d6d2;
+  --chart-2:   #b3b3ad;
+  --chart-3:   #87877f;
+  --chart-4:   #54544d;
+  --chart-5:   #111111;
+  --modal-overlay: rgba(17,17,17,.55);
 
   --font-display: 'Spectral', Georgia, 'Times New Roman', serif;
   --font-sc:      'Spectral SC', Georgia, serif;
   --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+}
+
+[data-theme="dark"]{
+  --bg:        #141414;
+  --paper:     #0c0c0c;
+  --ink:       #ededeb;
+  --line:      #2b2b2b;
+  --gray-1:    #1c1c1a;
+  --gray-2:    #2e2e2c;
+  --gray-3:    #787872;
+  --gray-4:    #adada6;
+  --stamp:     #e24a3a;
+  --stamp-bg:  #2d1412;
+  --chart-0:   #1c1c1a;
+  --chart-1:   #333330;
+  --chart-2:   #4f4f49;
+  --chart-3:   #75756d;
+  --chart-4:   #abab9f;
+  --chart-5:   #ededeb;
+  --modal-overlay: rgba(0,0,0,.75);
 }
 
 *{ box-sizing:border-box; }
@@ -28,12 +55,33 @@ body{
   font-size:13px;
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
+  transition: background-color .2s ease, color .2s ease;
 }
 ::selection{ background:var(--ink); color:var(--bg); }
 button{ font-family:inherit; }
 input, select{ font-family:inherit; }
 
 .hidden{ display:none !important; }
+
+/* Theme toggle icons */
+.theme-icon-sun { display: none; }
+.theme-icon-moon { display: block; }
+[data-theme="dark"] .theme-icon-sun { display: block; }
+[data-theme="dark"] .theme-icon-moon { display: none; }
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  cursor: pointer;
+  line-height: 1;
+}
+.login-theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
 
 /* =========================================================
    SHARED PRIMITIVES
@@ -349,12 +397,12 @@ input, select{ font-family:inherit; }
 .cell:hover{ border-color:var(--ink); }
 .cell.cell-empty{ cursor:default; border-style:dashed; border-color:var(--gray-1); }
 .cell.cell-future{ cursor:default; border-style:dashed; border-color:var(--gray-1); opacity:.4; }
-.cell-0{ background:var(--gray-1); }
-.cell-1{ background:#d6d6d2; }
-.cell-2{ background:#b3b3ad; }
-.cell-3{ background:#87877f; }
-.cell-4{ background:#54544d; }
-.cell-5{ background:var(--ink); }
+.cell-0{ background:var(--chart-0); }
+.cell-1{ background:var(--chart-1); }
+.cell-2{ background:var(--chart-2); }
+.cell-3{ background:var(--chart-3); }
+.cell-4{ background:var(--chart-4); }
+.cell-5{ background:var(--chart-5); }
 .chart-legend{
   display:flex;
   align-items:center;
@@ -380,7 +428,7 @@ input, select{ font-family:inherit; }
 /* modal */
 .modal-overlay{
   position:fixed; inset:0;
-  background:rgba(17,17,17,.55);
+  background:var(--modal-overlay);
   display:flex; align-items:center; justify-content:center;
   padding:20px;
   z-index:50;
