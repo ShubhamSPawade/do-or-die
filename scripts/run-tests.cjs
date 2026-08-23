@@ -26,6 +26,9 @@ async function waitForServer(timeoutMs){
 
   let code = 0;
   for(const script of ['scripts/test-selfserve.mjs', 'scripts/smoke-test.mjs']){
+    if(script === 'scripts/smoke-test.mjs'){
+      try { execSync('node scripts/seed.js', { cwd: projectDir, env, stdio: 'ignore' }); } catch {}
+    }
     console.log(`\n--- Running ${script} ---`);
     try {
       const out = execSync(`node ${script}`, { cwd: projectDir, env, encoding: 'utf8' });

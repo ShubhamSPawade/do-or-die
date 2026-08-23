@@ -24,10 +24,12 @@ app.use('/api', userRoutes);
 app.use('/api', stateRoutes);
 app.use('/api', settingsRoutes);
 
-// always revalidate HTML so deploys reach users immediately
+// always revalidate assets so deploys reach users immediately without caching issues
 app.use(express.static(path.join(__dirname, '..', 'public'), {
   setHeaders(res, filePath){
-    if(filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
+    if(filePath.endsWith('.html') || filePath.endsWith('.css') || filePath.endsWith('.js') || filePath.endsWith('index.html')){
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
   }
 }));
 
